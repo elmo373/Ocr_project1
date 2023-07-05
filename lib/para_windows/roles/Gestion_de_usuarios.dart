@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:postgres/postgres.dart';
 import 'package:postgre_flutter/Encriptacion.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(WindowsGestion());
@@ -146,9 +147,10 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
 
       ];
 
-      final currentDateTime = DateTime.now();
+      final currentDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
       // Convertir la fecha y hora en el formato deseado
-      final formattedDateTime = currentDateTime.toIso8601String();
+      final formattedDateTime = AESCrypt.encrypt(currentDateTime.toString());
+
 
       for (var dato in datos) {
         await connection.query(

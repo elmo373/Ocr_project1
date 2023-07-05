@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:postgre_flutter/para_windows/roles/editar.dart';
 import 'package:postgres/postgres.dart';
 import 'package:postgre_flutter/Encriptacion.dart';
+import '../base_de_datos_control.dart';
 
 void main() {
   runApp(WindowsAdministradorMain());
@@ -23,8 +26,8 @@ class WindowsHomePage extends StatefulWidget {
 class _WindowsHomePageState extends State<WindowsHomePage> {
   List<Map<String, dynamic>> usuarios = [];
   String searchQuery = '';
-  Map<String, dynamic>? editingUsuario = null;
-
+  String nombre_de_tabla = 'usuarios';
+  Map<String, dynamic>? editingUsuario;
 
   @override
   void initState() {
@@ -33,52 +36,8 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
   }
 
   void obtenerUsuarios() async {
-    final connection = PostgreSQLConnection(
-      'localhost',
-      5432,
-      'ocrdb',
-      username: 'emanuel',
-      password: 'Emi77',
-    );
-
-    try {
-      await connection.open();
-
-      final results = await connection.query("SELECT * FROM usuarios");
-      usuarios = results.map((row) {
-        final usuario = {
-          'C.I.': AESCrypt.decrypt(row[0]),
-          'Nombre': AESCrypt.decrypt(row[1]),
-          'Contraseña': AESCrypt.decrypt(row[2]),
-          'Correo Electrónico': AESCrypt.decrypt(row[3]),
-          'Rol': getRolName(AESCrypt.decrypt(row[4])),
-          'Fecha de Registro': row[5],
-          'Numero de Telefono': AESCrypt.decrypt(row[6]),
-        };
-        return usuario;
-      }).toList();
-    } catch (e) {
-      print('Error en la conexión a PostgreSQL: $e');
-    } finally {
-      await connection.close();
-    }
-
+    usuarios = await base_de_datos_control.obtenerDatos(nombre_de_tabla);
     setState(() {});
-  }
-
-  String getRolName(String rol) {
-    switch (rol) {
-      case 'administrador':
-        return 'Administrador';
-      case 'personal_regular':
-        return 'Personal';
-      case 'tecnico':
-        return 'Técnico';
-      case 'interesado_en_el_registro':
-        return 'En Trámite para el Registro';
-      default:
-        return '';
-    }
   }
 
   List<Map<String, dynamic>> getFilteredUsuarios() {
@@ -86,89 +45,19 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
       return usuarios;
     } else {
       return usuarios.where((usuario) {
-        return usuario.values.any((value) =>
-            value.toString().toLowerCase().contains(searchQuery.toLowerCase()));
+        return usuario.values.any((value) => value.toString().toLowerCase().contains(searchQuery.toLowerCase()));
       }).toList();
     }
   }
 
-  void editarUsuario(String usuarioId) {
-    setState(() {
-      editingUsuario = usuarios.firstWhere((usuario) => usuario['C.I.'] == usuarioId);
-    });
-  }
-
   void eliminarUsuario(String ci) async {
-    final connection = PostgreSQLConnection(
-      'localhost',
-      5432,
-      'ocrdb',
-      username: 'emanuel',
-      password: 'Emi77',
-    );
-
-    try {
-      await connection.open();
-      ci = AESCrypt.encrypt(ci);
-      await connection.execute("DELETE FROM usuarios WHERE id_ci = '$ci'");
-      print('Usuario eliminado exitosamente');
-    } catch (e) {
-      print('Error al eliminar el usuario: $e');
-    } finally {
-      await connection.close();
-    }
-
+    await base_de_datos_control.eliminarDatos(nombre_de_tabla, ci);
     obtenerUsuarios(); // Actualizar la lista de usuarios después de la eliminación
   }
 
-  void guardarCambios() async {
-    final connection = PostgreSQLConnection(
-      'localhost',
-      5432,
-      'ocrdb',
-      username: 'emanuel',
-      password: 'Emi77',
-    );
-
-    try {
-      await connection.open();
-      final ci = AESCrypt.encrypt(editingUsuario!['C.I.']);
-      final nombre = AESCrypt.encrypt(editingUsuario!['Nombre']);
-      final contrasenna = AESCrypt.encrypt(editingUsuario!['Contraseña']);
-    final correo = AESCrypt.encrypt(editingUsuario!['Correo Electrónico']);
-    final rol = getRolValue(editingUsuario!['Rol']);
-    final telefono = AESCrypt.encrypt(editingUsuario!['Numero de Telefono']);
-
-      final String formattedDateTime = 'NOW()';
-
-    await connection.query("UPDATE usuarios SET id_ci = '$ci', nombre = '$nombre', contrasenna = '$contrasenna', correo_electronico = '$correo', rol = '$rol', numero_de_telefono = '$telefono', fecha_de_registro ='$formattedDateTime' WHERE id_ci = '$ci'");
-
-    print('Cambios guardados exitosamente');
-    } catch (e) {
-    print('Error al guardar los cambios: $e');
-    } finally {
-    await connection.close();
-    setState(() {
-
-    });
-    }
-
-    obtenerUsuarios(); // Actualizar la lista de usuarios después de guardar los cambios
-  }
-
-  String getRolValue(String rolName) {
-    switch (rolName) {
-      case 'Administrador':
-        return 'administrador';
-      case 'Personal':
-        return 'personal_regular';
-      case 'Técnico':
-        return 'tecnico';
-      case 'En Trámite para el Registro':
-        return 'interesado_en_el_registro';
-      default:
-        return '';
-    }
+  void editarUsuario(String ci, dynamic dato) async {
+    await base_de_datos_control.editarDatos(nombre_de_tabla, ci,dato);
+    obtenerUsuarios(); // Actualizar la lista de usuarios después de la eliminación
   }
 
   @override
@@ -185,6 +74,13 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
+                  IconButton(
+                    icon: Icon(Icons.search),
+                    color: Colors.lightGreenAccent[700],
+                    onPressed: () {
+                      // Aquí puedes implementar la lógica adicional que desees al hacer clic en la lupa
+                    },
+                  ),
                   Text(
                     'Buscar:',
                     style: TextStyle(
@@ -195,11 +91,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                   SizedBox(width: 8),
                   Expanded(
                     child: TextField(
-                      onChanged: (value) {
-                        setState(() {
-                          searchQuery = value;
-                        });
-                      },
+                      onChanged: (value) => setState(() => searchQuery = value),
                       style: TextStyle(color: Colors.lightGreenAccent[700]),
                       decoration: InputDecoration(
                         enabledBorder: UnderlineInputBorder(
@@ -210,13 +102,6 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                         ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.search),
-                    color: Colors.lightGreenAccent[700],
-                    onPressed: () {
-                      // Aquí puedes implementar la lógica adicional que desees al hacer clic en la lupa
-                    },
                   ),
                   IconButton(
                     icon: Icon(Icons.person_add),
@@ -234,8 +119,8 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                 child: filteredUsuarios.isNotEmpty
                     ? DataTable(
                   columns: [
-                    ...filteredUsuarios.first.keys.map((String key) {
-                      return DataColumn(
+                    ...filteredUsuarios.first.keys.map(
+                          (String key) => DataColumn(
                         label: Text(
                           key,
                           style: TextStyle(
@@ -243,8 +128,8 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                             fontSize: 18,
                           ),
                         ),
-                      );
-                    }),
+                      ),
+                    ),
                     DataColumn(
                       label: Text(
                         'Acciones',
@@ -262,7 +147,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                       cells: [
                         ...usuario.keys.map((String key) {
                           final cellValue = key == 'Fecha de Registro'
-                              ? '${usuario[key]}'.substring(0, 10)
+                              ? '${usuario[key]}'.substring(0, 19)
                               : '${usuario[key]}';
 
                           if (editingUsuario != null && editingUsuario!['C.I.'] == usuarioId) {
@@ -293,47 +178,19 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                                 icon: Icon(Icons.edit),
                                 color: Colors.lightBlueAccent,
                                 onPressed: () {
-                                  editarUsuario(usuarioId);
+                                  Editores editores = Editores();
+                                  editores.Editar(context, nombre_de_tabla, editarUsuario, usuario['C.I.']);
                                 },
                               ),
                               IconButton(
                                 icon: Icon(Icons.delete),
                                 color: Colors.redAccent,
                                 onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        title: Text('Confirmar Eliminación'),
-                                        content: Text('¿Estás seguro de que deseas eliminar este usuario?'),
-                                        actions: [
-                                          TextButton(
-                                            child: Text('Cancelar'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                          TextButton(
-                                            child: Text('Eliminar'),
-                                            onPressed: () {
-                                              eliminarUsuario(usuario['C.I.']);
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
+                                  Editores editores = Editores();
+                                  editores.Eliminador(context, nombre_de_tabla, eliminarUsuario, usuario['C.I.']);
+                                  obtenerUsuarios();
                                 },
                               ),
-                              if (editingUsuario != null && editingUsuario!['C.I.'] == usuarioId)
-                                IconButton(
-                                  icon: Icon(Icons.check),
-                                  color: Colors.greenAccent,
-                                  onPressed: () {
-                                    guardarCambios();
-                                  },
-                                ),
                             ],
                           ),
                         ),
