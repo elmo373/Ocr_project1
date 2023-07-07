@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:postgre_flutter/para_windows/roles/editar.dart';
-import 'package:postgres/postgres.dart';
-import 'package:postgre_flutter/Encriptacion.dart';
 import '../base_de_datos_control.dart';
 
 void main() {
@@ -60,23 +57,28 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
     obtenerUsuarios(); // Actualizar la lista de usuarios después de la eliminación
   }
 
+  void agregarUsuario(String x,dynamic dato) async {
+    await base_de_datos_control.agregarDatos(nombre_de_tabla, dato);
+    obtenerUsuarios(); // Actualizar la lista de usuarios después de la eliminación
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredUsuarios = getFilteredUsuarios();
 
     return Scaffold(
       body: Container(
-        color: Colors.indigo[900],
+        color: Color.fromRGBO(3, 72, 128, 1),
         child: Column(
           children: [
             Container(
-              color: Colors.indigo[900],
+              color: Color.fromRGBO(3, 72, 128, 1),
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   IconButton(
                     icon: Icon(Icons.search),
-                    color: Colors.lightGreenAccent[700],
+                    color: Colors.white,
                     onPressed: () {
                       // Aquí puedes implementar la lógica adicional que desees al hacer clic en la lupa
                     },
@@ -84,7 +86,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                   Text(
                     'Buscar:',
                     style: TextStyle(
-                      color: Colors.lightGreenAccent[700],
+                      color: Colors.white,
                       fontSize: 18,
                     ),
                   ),
@@ -92,13 +94,13 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                   Expanded(
                     child: TextField(
                       onChanged: (value) => setState(() => searchQuery = value),
-                      style: TextStyle(color: Colors.lightGreenAccent[700]),
+                      style: TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.lightGreenAccent.shade700),
+                          borderSide: BorderSide(color: Colors.white),
                         ),
                         focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.lightGreenAccent.shade700),
+                          borderSide: BorderSide(color: Colors.white),
                         ),
                       ),
                     ),
@@ -107,7 +109,8 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                     icon: Icon(Icons.person_add),
                     color: Colors.lightGreenAccent[700],
                     onPressed: () {
-                      // Implementa la lógica para agregar usuarios
+                      Editores editores = Editores();
+                      editores.Insertar(context, nombre_de_tabla, agregarUsuario);
                     },
                   ),
                 ],
@@ -124,7 +127,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                         label: Text(
                           key,
                           style: TextStyle(
-                            color: Colors.lightGreenAccent[700],
+                            color: Colors.white,
                             fontSize: 18,
                           ),
                         ),
@@ -134,7 +137,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                       label: Text(
                         'Acciones',
                         style: TextStyle(
-                          color: Colors.lightGreenAccent[700],
+                          color: Colors.white,
                           fontSize: 18,
                         ),
                       ),
@@ -159,7 +162,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                                   });
                                 },
                                 controller: TextEditingController(text: editingUsuario![key]),
-                                style: TextStyle(color: Colors.lightGreenAccent[700]),
+                                style: TextStyle(color: Colors.white),
                               ),
                             );
                           }
@@ -167,7 +170,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                           return DataCell(
                             Text(
                               cellValue,
-                              style: TextStyle(color: Colors.lightGreenAccent[700]),
+                              style: TextStyle(color: Colors.white),
                             ),
                           );
                         }),

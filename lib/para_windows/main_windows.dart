@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:postgre_flutter/para_windows/roles/main_administrador_windows.dart';
-
-void main() {
-  runApp(WindowsApp());
-}
+import 'package:postgre_flutter/Encriptacion.dart';
+import 'package:postgre_flutter/para_windows/base_de_datos_control.dart';
+import 'package:postgre_flutter/para_windows/pestannas/pestannas.dart';
 
 class WindowsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: WindowsHomePage(),
+      home: Scaffold(
+        resizeToAvoidBottomInset: false, // Evita redimensionamiento al aparecer el teclado
+        body: WindowsHomePage(),
+      ),
     );
   }
 }
+
 
 class WindowsHomePage extends StatefulWidget {
   @override
@@ -20,81 +22,136 @@ class WindowsHomePage extends StatefulWidget {
 }
 
 class _WindowsHomePageState extends State<WindowsHomePage> {
-  int _selectedIndex = 0;
+  String id_ci = '';
+  String contrasenna = '';
+  String rol = '';
+  String nombre = '';
 
-  static const List<String> _tabTitles = [
-    'Gestión de usuarios',
-    'Pestaña 1',
-    'Pestaña 2',
-    'Pestaña 3',
-    'Pestaña 4',
-  ];
+  Future<void> login() async {
+    if (id_ci != null) {
+      String id_ciE = AESCrypt.encrypt(id_ci);
+      final response = await base_de_datos_control.obtenerDatosID("usuarios", id_ciE);
 
-  Widget _buildTabContent(int index) {
-    switch (index) {
-      case 0:
-        return WindowsAdministradorMain();
-      default:
-        return Container(
-          color: Colors.indigo[900],
-          child: Center(
-            child: Text(
-              'Contenido de ${_tabTitles[index]}',
-              style: TextStyle(color: Colors.indigo[900]),
+      if (response.isNotEmpty) {
+        final usuario = response[0];
+        if (usuario['Contraseña'] == contrasenna) {
+          rol = usuario['Rol'];
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WindowsPestannas(),
             ),
+          );
+        } else {
+          // Contraseña incorrecta, se muestra un mensaje de error
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Error de inicio de sesión'),
+              content: Text('Los datos proporcionados son incorrectos.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Aceptar'),
+                ),
+              ],
+            ),
+          );
+        }
+      } else {
+        // Usuario no encontrado, se muestra un mensaje de error
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Error de inicio de sesión'),
+            content: Text('El ID de usuario proporcionado no existe.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Aceptar'),
+              ),
+            ],
           ),
         );
+      }
     }
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Container(
-            height: 48,
-            color: Colors.lightGreenAccent[700],
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _tabTitles.length,
-              itemBuilder: (context, index) {
-                return InkWell(
-                  onTap: () {
-                    setState(() {
-                      _selectedIndex = index;
-                    });
-                  },
-                  child: Container(
-                    height: 48,
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: _selectedIndex == index ? Colors.indigo[900]! : Colors.transparent,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      _tabTitles[index],
-                      style: TextStyle(
-                        color: _selectedIndex == index ? Colors.indigo[900] : Colors.indigo[900],
-                        fontSize: _selectedIndex == index ? 22 : 21,
-                        fontWeight: _selectedIndex == index ? FontWeight.bold : FontWeight.normal,
-                      ),
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        toolbarHeight: 90,
+        title: SizedBox(
+          width: 300,
+          height: 90,
+          child: Image.asset(
+            'lib/imagenes/minlogo.png',
+            fit: BoxFit.contain,
+          ),
+        ),
+      ),
+      body: Container(
+        color: Color.fromRGBO(3, 72, 128, 1), // Fondo azul marino
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Ingrese sus credenciales',
+                style: TextStyle(fontSize: 20, color: Colors.white), // Letras blancas
+              ),
+              SizedBox(height: 20),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 40),
+                child: TextField(
+                  onChanged: (value) => id_ci = value,
+                  decoration: InputDecoration(
+                    labelText: 'ID de usuario (CI)',
+                    labelStyle: TextStyle(color: Colors.white), // Letras blancas
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white), // Línea blanca
                     ),
                   ),
-                );
-              },
-            ),
+                  style: TextStyle(color: Colors.white), // Letras blancas
+                ),
+              ),
+              SizedBox(height: 10),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 40),
+                child: TextField(
+                  onChanged: (value) => contrasenna = value,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Contraseña',
+                    labelStyle: TextStyle(color: Colors.white), // Letras blancas
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white), // Línea blanca
+                    ),
+                  ),
+                  style: TextStyle(color: Colors.white), // Letras blancas
+                ),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  login();
+                },
+                child: Text('Iniciar sesión'),
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.white, // Fondo blanco
+                  onPrimary: Color.fromRGBO(3, 72, 128, 1), // Texto azul marino
+                ),
+              ),
+              SizedBox(height: 20),
+            ],
           ),
-          Expanded(
-            child: _buildTabContent(_selectedIndex),
-          ),
-        ],
+        ),
       ),
     );
   }
+
 }

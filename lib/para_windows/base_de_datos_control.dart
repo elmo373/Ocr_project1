@@ -32,17 +32,19 @@ class base_de_datos_control {
 
   static Future<void> editarDatos(String nombre_de_tabla, String ci, List<Map<String, dynamic>> dato) async {
     final connection = _getConnection();
+    print(dato);
 
     try {
       await connection.open();
       ci = AESCrypt.encrypt(ci);
+      final fecha =DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
       final ciEncriptado = AESCrypt.encrypt(dato[0]['C.I.']);
       final nombreEncriptado = AESCrypt.encrypt(dato[0]['Nombre']);
       final contrasennaEncriptada = AESCrypt.encrypt(dato[0]['Contraseña']);
       final correoEncriptado = AESCrypt.encrypt(dato[0]['Correo Electrónico']);
-      final rolEncriptado = AESCrypt.encrypt(dato[0]['Rol']);
+      final rolEncriptado = AESCrypt.encrypt(detras_de_rol(dato[0]['Rol']));
       final telefonoEncriptado = AESCrypt.encrypt(dato[0]['Numero de Telefono']);
-      final fechaEncriptada = AESCrypt.encrypt(dato[0]['Fecha de Registro']);
+      final fechaEncriptada = AESCrypt.encrypt(fecha);
 
       await connection.query("UPDATE usuarios SET id_ci = '$ciEncriptado',"
           "nombre = '$nombreEncriptado',"
@@ -58,6 +60,36 @@ class base_de_datos_control {
     } finally {
       await connection.close();
     }
+    obtenerDatos(nombre_de_tabla);
+  }
+
+  static Future<void> agregarDatos(String nombre_de_tabla, List<Map<String, dynamic>> datos) async {
+    final connection = _getConnection();
+    print(datos);
+
+    try {
+      await connection.open();
+      final fecha = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+      final ciEncriptado = AESCrypt.encrypt(datos[0]['C.I.']);
+      final nombreEncriptado = AESCrypt.encrypt(datos[0]['Nombre']);
+      final contrasennaEncriptada = AESCrypt.encrypt(datos[0]['Contraseña']);
+      final correoEncriptado = AESCrypt.encrypt(datos[0]['Correo Electrónico']);
+      final rolEncriptado = AESCrypt.encrypt(detras_de_rol(datos[1]['Rol']));
+      final telefonoEncriptado = AESCrypt.encrypt(datos[0]['Numero de Telefono']);
+      final fechaEncriptada = AESCrypt.encrypt(fecha);
+
+      await connection.query(
+          "INSERT INTO $nombre_de_tabla (id_ci, nombre, contrasenna, correo_electronico, rol, numero_de_telefono, fecha_de_registro) "
+              "VALUES ('$ciEncriptado', '$nombreEncriptado', '$contrasennaEncriptada', '$correoEncriptado', '$rolEncriptado', '$telefonoEncriptado', '$fechaEncriptada')"
+      );
+
+      print('Registro agregado exitosamente');
+    } catch (e) {
+      print('Error al agregar el registro: $e');
+    } finally {
+      await connection.close();
+    }
+
     obtenerDatos(nombre_de_tabla);
   }
 
@@ -125,4 +157,19 @@ class base_de_datos_control {
         return '';
     }
   }
+  static String detras_de_rol(String rol) {
+    switch (rol) {
+      case 'Administrador':
+        return 'administrador';
+      case 'Personal':
+        return 'personal_regular';
+      case 'Técnico':
+        return 'tecnico';
+      case 'En Trámite para el Registro':
+        return 'interesado_en_el_registro';
+      default:
+        return '';
+    }
+  }
+
 }
