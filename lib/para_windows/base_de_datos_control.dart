@@ -1,4 +1,3 @@
-import 'package:encrypt/encrypt.dart';
 import 'package:intl/intl.dart';
 import 'package:postgres/postgres.dart';
 import 'package:postgre_flutter/encriptacion.dart';

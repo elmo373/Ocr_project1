@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:postgre_flutter/Encriptacion.dart';
-import 'package:postgre_flutter/para_windows/base_de_datos_control.dart';
+import 'package:postgre_flutter/para_web/api_control.dart';
 
-class Editores {
+class EditoresApi {
   List<Map<String, dynamic>> dato = [];
 
   void Eliminador(BuildContext context, String nombre_de_tabla, void Function(String) eliminar, String ci) {
@@ -34,14 +34,13 @@ class Editores {
 
   Future<List<Map<String, dynamic>>> buscadorID(String nombre_de_tabla, String ci) async {
     ci = AESCrypt.encrypt(ci);
-    final usuario = await base_de_datos_control.obtenerDatosID(nombre_de_tabla, ci);
+    final usuario = await api_control.obtenerDatosId(nombre_de_tabla, ci);
     return usuario;
   }
 
   void Editar(BuildContext context, String nombre_de_tabla, void Function(String, List<Map<String, dynamic>>) editar, String ci) async {
     List<Map<String, dynamic>> usuarios = await buscadorID(nombre_de_tabla, ci);
     List<Map<String, dynamic>> nuevosUsuarios = List.from(usuarios);
-    print(usuarios);
 
     String Rol_a_cambiar = "Cambiar " + usuarios[0]['Rol'].toString() + " por:";
 
@@ -241,8 +240,10 @@ class Editores {
                     Map<String, dynamic> nuevoUsuario = {
                       'Rol': botonElegido,
                     };
+                    print(nuevoUsuario);
 
                     nuevosUsuarios.add(nuevoUsuario);
+                    print(nuevosUsuarios);
 
                     agregar("x", nuevosUsuarios); // Agregar el usuario a la base de datos
                     Navigator.of(context).pop(); // Cerrar la ventana de alerta

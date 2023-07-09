@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:postgre_flutter/Encriptacion.dart';
 import 'package:postgre_flutter/para_windows/base_de_datos_control.dart';
-import 'package:postgre_flutter/para_windows/pestannas/pestannas.dart';
-
+import 'package:postgre_flutter/para_windows/pestannas/pestannas_Win.dart';
+void main(){
+  runApp(WindowsApp());
+}
 class WindowsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+
     return MaterialApp(
       home: Scaffold(
-        resizeToAvoidBottomInset: false, // Evita redimensionamiento al aparecer el teclado
         body: WindowsHomePage(),
       ),
     );
   }
 }
-
 
 class WindowsHomePage extends StatefulWidget {
   @override
@@ -28,7 +32,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
   String nombre = '';
 
   Future<void> login() async {
-    if (id_ci != null) {
+    if (id_ci != '') {
       String id_ciE = AESCrypt.encrypt(id_ci);
       final response = await base_de_datos_control.obtenerDatosID("usuarios", id_ciE);
 
@@ -39,11 +43,10 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => WindowsPestannas(),
+              builder: (context) => WindowsPestannas(rol: rol),
             ),
           );
         } else {
-          // Contraseña incorrecta, se muestra un mensaje de error
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
@@ -59,7 +62,6 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
           );
         }
       } else {
-        // Usuario no encontrado, se muestra un mensaje de error
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -79,6 +81,14 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -95,14 +105,14 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
         ),
       ),
       body: Container(
-        color: Color.fromRGBO(3, 72, 128, 1), // Fondo azul marino
+        color: Color.fromRGBO(3, 72, 128, 1),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 'Ingrese sus credenciales',
-                style: TextStyle(fontSize: 20, color: Colors.white), // Letras blancas
+                style: TextStyle(fontSize: 20, color: Colors.white),
               ),
               SizedBox(height: 20),
               Padding(
@@ -111,12 +121,12 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                   onChanged: (value) => id_ci = value,
                   decoration: InputDecoration(
                     labelText: 'ID de usuario (CI)',
-                    labelStyle: TextStyle(color: Colors.white), // Letras blancas
+                    labelStyle: TextStyle(color: Colors.white),
                     enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white), // Línea blanca
+                      borderSide: BorderSide(color: Colors.white),
                     ),
                   ),
-                  style: TextStyle(color: Colors.white), // Letras blancas
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
               SizedBox(height: 10),
@@ -127,12 +137,12 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                   obscureText: true,
                   decoration: InputDecoration(
                     labelText: 'Contraseña',
-                    labelStyle: TextStyle(color: Colors.white), // Letras blancas
+                    labelStyle: TextStyle(color: Colors.white),
                     enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white), // Línea blanca
+                      borderSide: BorderSide(color: Colors.white),
                     ),
                   ),
-                  style: TextStyle(color: Colors.white), // Letras blancas
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
               SizedBox(height: 20),
@@ -142,8 +152,8 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                 },
                 child: Text('Iniciar sesión'),
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.white, // Fondo blanco
-                  onPrimary: Color.fromRGBO(3, 72, 128, 1), // Texto azul marino
+                  primary: Colors.white,
+                  onPrimary: Color.fromRGBO(3, 72, 128, 1),
                 ),
               ),
               SizedBox(height: 20),
@@ -153,5 +163,4 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
       ),
     );
   }
-
 }

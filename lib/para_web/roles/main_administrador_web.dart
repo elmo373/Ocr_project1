@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:postgre_flutter/para_windows/roles/editar.dart';
-import '../base_de_datos_control.dart';
+import 'package:postgre_flutter/para_web/roles/editarApi.dart';
+import '../api_control.dart';
 
 
 class WindowsAdministradorMain extends StatelessWidget {
@@ -31,7 +31,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
   }
 
   void obtenerUsuarios() async {
-    usuarios = await base_de_datos_control.obtenerDatos(nombre_de_tabla);
+    usuarios = await api_control.obtenerDatos(nombre_de_tabla);
     setState(() {});
   }
 
@@ -46,17 +46,17 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
   }
 
   void eliminarUsuario(String ci) async {
-    await base_de_datos_control.eliminarDatos(nombre_de_tabla, ci);
+    await api_control.eliminarDatos(nombre_de_tabla, ci);
     obtenerUsuarios(); // Actualizar la lista de usuarios después de la eliminación
   }
 
   void editarUsuario(String ci, dynamic dato) async {
-    await base_de_datos_control.editarDatos(nombre_de_tabla, ci,dato);
+    await api_control.editarDatos(nombre_de_tabla, ci,dato);
     obtenerUsuarios(); // Actualizar la lista de usuarios después de la eliminación
   }
 
   void agregarUsuario(String x,dynamic dato) async {
-    await base_de_datos_control.agregarDatos(nombre_de_tabla, dato);
+    await api_control.agregarDatos(nombre_de_tabla, dato);
     obtenerUsuarios(); // Actualizar la lista de usuarios después de la eliminación
   }
 
@@ -107,7 +107,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                     icon: Icon(Icons.person_add),
                     color: Colors.lightGreenAccent[700],
                     onPressed: () {
-                      Editores editores = Editores();
+                      EditoresApi editores = EditoresApi();
                       editores.Insertar(context, nombre_de_tabla, agregarUsuario);
                     },
                   ),
@@ -179,7 +179,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                                 icon: Icon(Icons.edit),
                                 color: Colors.lightBlueAccent,
                                 onPressed: () {
-                                  Editores editores = Editores();
+                                  EditoresApi editores = EditoresApi();
                                   editores.Editar(context, nombre_de_tabla, editarUsuario, usuario['C.I.']);
                                 },
                               ),
@@ -187,7 +187,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                                 icon: Icon(Icons.delete),
                                 color: Colors.redAccent,
                                 onPressed: () {
-                                  Editores editores = Editores();
+                                  EditoresApi editores = EditoresApi();
                                   editores.Eliminador(context, nombre_de_tabla, eliminarUsuario, usuario['C.I.']);
                                   obtenerUsuarios();
                                 },
