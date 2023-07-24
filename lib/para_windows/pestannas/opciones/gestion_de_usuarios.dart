@@ -1,26 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:postgre_flutter/para_windows/main_windows.dart';
 import 'package:postgre_flutter/para_windows/pestannas/Eleccion_por_rol_Win.dart';
-void main(){
-  runApp(WindowsPestannas(rol: 'Administrador'));
-}
-class WindowsPestannas extends StatelessWidget {
-  final String rol;
+import 'package:postgre_flutter/para_windows/pestannas/opciones/gestion_de_usuario_eleccion.dart';
 
-  WindowsPestannas({required this.rol});
+class gestion_de_usuario extends StatelessWidget {
+
+  gestion_de_usuario();
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: WindowsHomePage(rol: rol),
+      home: WindowsHomePage(),
     );
   }
 }
 
 class WindowsHomePage extends StatefulWidget {
-  final String rol;
 
-  WindowsHomePage({required this.rol});
+  WindowsHomePage();
 
   @override
   _WindowsHomePageState createState() => _WindowsHomePageState();
@@ -29,42 +26,17 @@ class WindowsHomePage extends StatefulWidget {
 class _WindowsHomePageState extends State<WindowsHomePage> {
   int _selectedIndex = 0;
 
-  List<String> _getTabTitles() {
-    switch (widget.rol) {
-      case 'Administrador':
-        return [
-          'Gestión de usuarios',
-          'Reportes de usuarios',
-          'Gestion de Documentos',
-          'Solicitudes de registro',
-          'Rol de trabajos',
-        ];
-      case 'Personal':
-        return [
-          'Lista de usuarios',
-          'Lista de Documentos',
-          'Rol de trabajos',
-        ];
-      case 'Técnico':
-        return [
-          'Lista de usuarios',
-          'Gestion de Documentos',
-          'Lista de Documentos',
-          'Rol de trabajos',
-        ];
-      case 'En Trámite para el Registro':
-        return [
-          'Solicitud de registro',
-          'Personal de transporte',
-        ];
-      default:
-        return [];
-    }
-  }
+  List<String> _getTabTitles =
+    [
+      'Lista de usuarios',
+      'Edición de usuarios',
+      'Creación de usuarios',
+      'Estado de usuarios',
+    ];
 
   @override
   Widget build(BuildContext context) {
-    final tabTitles = _getTabTitles();
+    final tabTitles = _getTabTitles;
     return Scaffold(
       body: Column(
         children: [
@@ -74,14 +46,6 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
             color: Colors.white,
             child: Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Image.asset(
-                    'lib/imagenes/minlogo.png',
-                    width: 300,
-                    height: 90,
-                  ),
-                ),
                 Expanded(
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
@@ -111,29 +75,11 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                     )
 
                 ),
-                Container(
-                  color: Color.fromRGBO(3, 72, 128, 1),
-                  width: 90,
-                  height: 90,
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.arrow_back,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => WindowsApp()),
-                      );
-                    },
-                  ),
-                ),
               ],
             ),
           ),
           Expanded(
-            child: buildTabContent(_selectedIndex, widget.rol),
+            child: gestion_de_usaurio_eleccion(_selectedIndex),
           ),
         ],
       ),

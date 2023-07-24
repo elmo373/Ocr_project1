@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:postgre_flutter/para_windows/pestannas/opciones/gestion_de_usuarios.dart';
 import 'package:postgre_flutter/para_windows/roles/main_administrador_windows.dart';
 import 'package:postgre_flutter/para_windows/roles/main_personal_windows.dart';
 
@@ -7,9 +8,7 @@ Widget buildTabContent(int index, String rol) {
     case 'Administrador':
       switch (index) {
         case 0:
-          return WindowsAdministradorMain();
-        case 4:
-          return WindowsAdministradorMain();
+          return gestion_de_usuario();
         default:
           return Container(
             color: Color.fromRGBO(3, 72, 128, 1),

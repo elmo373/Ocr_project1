@@ -17,6 +17,7 @@ void main() {
   }
 }
 
+
 bool isWindows() {
   return !kIsWeb && Platform.isWindows;
 }

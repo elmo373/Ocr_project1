@@ -6,7 +6,7 @@ import 'package:postgre_flutter/encriptacion.dart';
 class api_control {
   static Future<void> eliminarDatos(String nombre_de_tabla, String ci) async {
     String Eci = AESCrypt.encrypt(ci);
-    final deleteUrl = 'http://localhost:3000/query/$nombre_de_tabla/delete/$Eci';
+    final deleteUrl = 'https://durable-path-393614.uc.r.appspot.com/query/$nombre_de_tabla/delete/$Eci';
     print(Eci);
     final response = await http.delete(Uri.parse(deleteUrl));
 
@@ -31,7 +31,7 @@ class api_control {
     final telefonoEncriptado = AESCrypt.encrypt(dato[0]['Numero de Telefono']);
     final fechaEncriptada = AESCrypt.encrypt(fecha.toString());
 
-    final updateUrl = 'http://localhost:3000/query/$nombre_de_tabla/update/$ciid';
+    final updateUrl = 'https://durable-path-393614.uc.r.appspot.com/query/$nombre_de_tabla/update/$ciid';
     final Map<String, String> requestBody = {
       'id_ci': ciEncriptado,
       'nombre': nombreEncriptado,
@@ -70,7 +70,7 @@ class api_control {
     final telefonoEncriptado = AESCrypt.encrypt(datos[0]['Numero de Telefono']);
     final fechaEncriptada = AESCrypt.encrypt(fecha);
 
-    final addUrl = 'http://localhost:3000/query/$nombre_de_tabla/insert';
+    final addUrl = 'https://durable-path-393614.uc.r.appspot.com/query/$nombre_de_tabla/insert';
     final Map<String, String> requestBody = {
       'id_ci': ciEncriptado,
       'nombre': nombreEncriptado,
@@ -101,7 +101,7 @@ class api_control {
   }
 
   static Future<List<Map<String, dynamic>>> obtenerDatos(String nombre_de_tabla) async {
-    final url = 'http://localhost:3000/query/$nombre_de_tabla';
+    final url = 'https://durable-path-393614.uc.r.appspot.com/query/$nombre_de_tabla';
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -125,7 +125,7 @@ class api_control {
   }
 
   static Future<List<Map<String, dynamic>>> obtenerDatosId(String nombre_de_tabla, String ci) async {
-    final url = 'http://localhost:3000/query/$nombre_de_tabla/$ci';
+    final url = 'https://durable-path-393614.uc.r.appspot.com/query/$nombre_de_tabla/$ci';
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {

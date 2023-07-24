@@ -34,30 +34,27 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
       case 'Administrador':
         return [
           'Gestión de usuarios',
-          'Reportes sobre usuarios',
-          'Gestion de Documentos',
-          'OCR',
+          'Reportes de usuarios',
+          'Gestión de Documentos',
           'Solicitudes de registro',
-          'Rol de guardia',
+          'Rol de trabajos',
         ];
       case 'Personal':
         return [
           'Lista de usuarios',
           'Lista de Documentos',
-          'Rol de guardia',
-          'OCR',
+          'Rol de trabajos',
         ];
       case 'Técnico':
         return [
           'Lista de usuarios',
           'Lista de Documentos',
-          'Rol de guardia',
-          'OCR',
+          'Rol de trabajos',
         ];
       case 'En Trámite para el Registro':
         return [
           'Solicitud de registro',
-          'Fecha de transporte',
+          'Personal de transporte',
         ];
       default:
         return [];

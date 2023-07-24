@@ -1,25 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:postgre_flutter/para_app/api_controlMobile.dart';
+import 'package:postgre_flutter/para_windows/roles/editar.dart';
+import 'package:postgre_flutter/para_windows/base_de_datos_control.dart';
 
-void main(){
-  runApp(WebPersonalListaDeUsuarios());
-}
-
-class WebPersonalListaDeUsuarios extends StatelessWidget {
+class lista_usuarios extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: WindowsHomePage(),
-    );
-  }
+  _lista_usuariosState createState() => _lista_usuariosState();
 }
 
-class WindowsHomePage extends StatefulWidget {
-  @override
-  _WindowsHomePageState createState() => _WindowsHomePageState();
-}
-
-class _WindowsHomePageState extends State<WindowsHomePage> {
+class _lista_usuariosState extends State<lista_usuarios>{
   List<Map<String, dynamic>> usuarios = [];
   String searchQuery = '';
   String nombre_de_tabla = 'usuarios';
@@ -32,7 +20,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
   }
 
   void obtenerUsuarios() async {
-    usuarios = await api_control.obtenerDatos(nombre_de_tabla);
+    usuarios = await base_de_datos_control.obtenerDatos(nombre_de_tabla);
     setState(() {});
   }
 
@@ -97,61 +85,52 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                 scrollDirection: Axis.horizontal,
                 child: filteredUsuarios.isNotEmpty
                     ? DataTable(
-                  columns: [
-                    DataColumn(
+                  columns: filteredUsuarios.first.keys.map(
+                        (String key) => DataColumn(
                       label: Text(
-                        'Nombre',
+                        key,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                         ),
                       ),
                     ),
-                    DataColumn(
-                      label: Text(
-                        'Correo Electronico',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Text(
-                        'Telefono',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ),
-                  ],
-                  rows: filteredUsuarios.map((Map<String, dynamic> usuario) {
-                    // Reemplaza con el identificador único del usuario
+                  ).toList(),
+                  rows: filteredUsuarios.map(
+                        (Map<String, dynamic> usuario) {
+                          final usuarioId = usuario['C.I.'];
+                      return DataRow(
+                        cells: usuario.keys.map(
+                              (String key) {
+                            final cellValue = key == 'Fecha de Registro'
+                                ? '${usuario[key]}'.substring(0, 19)
+                                : '${usuario[key]}';
 
-                    return DataRow(
-                      cells: [
-                        DataCell(
-                          Text(
-                            '${usuario['Nombre']}',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        DataCell(
-                          Text(
-                            '${usuario['Correo Electrónico']}',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        DataCell(
-                          Text(
-                            '${usuario['Numero de Telefono']}',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
+                            if (editingUsuario != null && editingUsuario!['C.I.'] == usuarioId) {
+                              return DataCell(
+                                TextField(
+                                  onChanged: (value) {
+                                    setState(() {
+                                      editingUsuario![key] = value;
+                                    });
+                                  },
+                                  controller: TextEditingController(text: editingUsuario![key]),
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              );
+                            }
+
+                            return DataCell(
+                              Text(
+                                cellValue,
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            );
+                          },
+                        ).toList(),
+                      );
+                    },
+                  ).toList(),
                 )
                     : Container(),
               ),

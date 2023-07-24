@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -7,34 +6,18 @@ import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
 
-void main() {
-  runApp(const MaterialApp(home: TextScanner()));
+import 'estado_del_ocr.dart';
+
+void main(){
+  runApp(TextScanner());
 }
+
 
 class TextScanner extends StatefulWidget {
   const TextScanner({Key? key}) : super(key: key);
 
   @override
   State<TextScanner> createState() => _TextScannerState();
-}
-
-class ResultScreen extends StatelessWidget {
-  final String text;
-
-  const ResultScreen({Key? key, required this.text}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Scanned Text'),
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(8.0),
-        child: Text(text),
-      ),
-    );
-  }
 }
 
 class _TextScannerState extends State<TextScanner> with WidgetsBindingObserver {
@@ -77,69 +60,92 @@ class _TextScannerState extends State<TextScanner> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.ltr, // o TextDirection.rtl, según tu necesidad
-      child: FutureBuilder(
-        future: future,
-        builder: (context, snapshot) {
-          return Stack(
-            children: [
-              if (isPermissionGranted)
-                FutureBuilder<List<CameraDescription>>(
-                    future: availableCameras(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        initCameraController(snapshot.data!);
-                        return Center(
-                          child: CameraPreview(cameraController!),
-                        );
-                      } else {
-                        return const LinearProgressIndicator();
-                      }
-                    }),
-              Scaffold(
-                backgroundColor:
-                isPermissionGranted ? Colors.transparent : null,
-                body: isPermissionGranted
-                    ? Column(
-                  children: [
-                    Expanded(child: Container()),
-                    Container(
-                      padding: EdgeInsets.only(bottom: 30),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          ElevatedButton(
-                            onPressed: (){
-                              scanImage();
-                            },
-                            child: const Text('Tomar foto'),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('OCR'),
+          backgroundColor: Color.fromRGBO(3, 72, 128, 1),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+        body: Directionality(
+          textDirection: TextDirection.ltr,
+          child: FutureBuilder(
+            future: future,
+            builder: (context, snapshot) {
+              return Stack(
+                children: [
+                  if (isPermissionGranted)
+                    FutureBuilder<List<CameraDescription>>(
+                      future: availableCameras(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          initCameraController(snapshot.data!);
+                          return Center(
+                            child: CameraPreview(cameraController!),
+                          );
+                        } else {
+                          return LinearProgressIndicator(
+                            backgroundColor: Color.fromRGBO(3, 72, 128, 1),
+                          );
+                        }
+                      },
+                    ),
+                  Scaffold(
+                    backgroundColor: isPermissionGranted ? Colors.transparent : null,
+                    body: isPermissionGranted
+                        ? Column(
+                      children: [
+                        Expanded(child: Container()),
+                        Container(
+                          padding: EdgeInsets.only(bottom: 30),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              ElevatedButton(
+                                onPressed: (){
+                                  scanImage();
+                                },
+                                child: Text('Tomar foto'),
+                                style: ElevatedButton.styleFrom(
+                                  primary: Color.fromRGBO(3, 72, 128, 1),
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: (){
+                                  pickImage();
+                                },
+                                child: Text('Seleccionar imagen'),
+                                style: ElevatedButton.styleFrom(
+                                  primary: Color.fromRGBO(3, 72, 128, 1),
+                                ),
+                              ),
+                            ],
                           ),
-                          ElevatedButton(
-                            onPressed: (){
-                              pickImage();
-                            },
-                            child: const Text('Sleccionar Imagen'),
+                        ),
+                      ],
+                    )
+                        : Center(
+                      child: Container(
+                        padding: const EdgeInsets.only(left: 24.0, right: 24.0),
+                        child: const Text(
+                          'Camera Permission Denied',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color.fromRGBO(3, 72, 128, 1),
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ],
-                )
-                    : Center(
-                  child: Container(
-                    padding:
-                    const EdgeInsets.only(left: 24.0, right: 24.0),
-                    child: const Text(
-                      'Camera Permission Denied',
-                      textAlign: TextAlign.center,
-                    ),
                   ),
-                ),
-              ),
-            ],
-          );
-        },
+                ],
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -216,6 +222,7 @@ class _TextScannerState extends State<TextScanner> with WidgetsBindingObserver {
     final navigator = Navigator.of(context);
     final inputImage = InputImage.fromFile(file);
     final recognizedText = await textDetector.processImage(inputImage);
+    print(recognizedText);
     await navigator.push(
       MaterialPageRoute(
         builder: (context) => ResultScreen(text: recognizedText.text),

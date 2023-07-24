@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:postgre_flutter/Encriptacion.dart';
 import 'package:postgre_flutter/para_app/api_controlMobile.dart';
-import 'package:postgre_flutter/para_app/pestannas/pestannas_Mobile.dart';
+import 'package:postgre_flutter/para_app/pantallas/tipo_de_documento.dart';
 
-void main() {
-  runApp(MobileApp());
-}
 
 class MobileApp extends StatelessWidget {
   @override
@@ -15,6 +12,7 @@ class MobileApp extends StatelessWidget {
     SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
 
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: WindowsHomePage(),
       ),
@@ -37,15 +35,20 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
     if (id_ci != '') {
       String id_ciE = AESCrypt.encrypt(id_ci);
       final response = await api_control.obtenerDatosId("usuarios", id_ciE);
+      final String estado = await api_control.obtenerEstado(id_ciE);
+
+      // Suponemos que tienes estado y rol disponibles en tu código.
 
       if (response.isNotEmpty) {
         final usuario = response[0];
-        if (usuario['Contraseña'] == contrasenna) {
+
+        if (usuario['Rol'] != 'Empresa' && estado == 'activo' && usuario['Contraseña'] == contrasenna) {
           rol = usuario['Rol'];
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => WindowsPestannas(rol: rol),
+              builder: (context) => tipo_de_documento(datos: usuario),
+
             ),
           );
         } else {
@@ -68,7 +71,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
           context: context,
           builder: (context) => AlertDialog(
             title: Text('Error de inicio de sesión'),
-            content: Text('El ID de usuario proporcionado no existe.'),
+            content: Text('Los datos proporcionados son incorrectos.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -78,20 +81,18 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
           ),
         );
       }
+
     }
     setState(() {});
   }
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -114,37 +115,37 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
             children: [
               Text(
                 'Ingrese sus credenciales',
-                style: TextStyle(fontSize: 20, color: Colors.white),
+                style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 20),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 40),
-                child: TextField(
-                  onChanged: (value) => id_ci = value,
-                  decoration: InputDecoration(
-                    labelText: 'ID de usuario (CI)',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: TextStyle(color: Colors.white),
+              Container(
+                padding: EdgeInsets.all(20),
+                margin: EdgeInsets.symmetric(horizontal: 40),
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.all(Radius.circular(20))
                 ),
-              ),
-              SizedBox(height: 10),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 40),
-                child: TextField(
-                  onChanged: (value) => contrasenna = value,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Contraseña',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
+                child: Column(
+                  children: [
+                    TextField(
+                      onChanged: (value) => id_ci = value,
+                      decoration: InputDecoration(
+                        labelText: 'ID de usuario (CI)',
+                        labelStyle: TextStyle(color: Color.fromRGBO(3, 72, 128, 1), fontWeight: FontWeight.bold),
+                      ),
+                      style: TextStyle(color: Color.fromRGBO(3, 72, 128, 1)),
                     ),
-                  ),
-                  style: TextStyle(color: Colors.white),
+                    SizedBox(height: 10),
+                    TextField(
+                      onChanged: (value) => contrasenna = value,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: 'Contraseña',
+                        labelStyle: TextStyle(color: Color.fromRGBO(3, 72, 128, 1), fontWeight: FontWeight.bold),
+                      ),
+                      style: TextStyle(color: Color.fromRGBO(3, 72, 128, 1)),
+                    ),
+                  ],
                 ),
               ),
               SizedBox(height: 20),
@@ -165,4 +166,5 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
       ),
     );
   }
+
 }

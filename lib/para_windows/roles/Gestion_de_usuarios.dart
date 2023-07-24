@@ -37,12 +37,13 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
 
   void fillTable() async {
     final connection = PostgreSQLConnection(
-      'localhost',
+      '35.225.248.224',  // Reemplaza con la IP de tu instancia GCP
       5432,
       'ocrdb',
       username: 'emanuel',
-      password: 'Emi77',
+      password: 'emi77',
     );
+
 
     try {
       await connection.open();
