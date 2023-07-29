@@ -34,7 +34,7 @@ class Editores {
   }
 
   Future<List<Map<String, dynamic>>> buscadorID(String nombre_de_tabla, String ci) async {
-    ci = AESCrypt.encrypt(ci);
+    ci = AESCrypt.encriptar(ci);
     final usuario = await base_de_datos_control.obtenerDatosID(nombre_de_tabla, ci);
     return usuario;
   }

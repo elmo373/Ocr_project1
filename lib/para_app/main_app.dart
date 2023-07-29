@@ -33,7 +33,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
 
   Future<void> login() async {
     if (id_ci != '') {
-      String id_ciE = AESCrypt.encrypt(id_ci);
+      String id_ciE = AESCrypt.encriptar(id_ci);
       final response = await api_control.obtenerDatosId("usuarios", id_ciE);
       final String estado = await api_control.obtenerEstado(id_ciE);
 

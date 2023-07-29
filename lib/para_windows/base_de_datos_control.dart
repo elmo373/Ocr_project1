@@ -5,11 +5,11 @@ import 'package:postgre_flutter/encriptacion.dart';
 class base_de_datos_control {
   static PostgreSQLConnection _getConnection() {
     return PostgreSQLConnection(
-      'localhost',
+      '35.225.248.224',
       5432,
       'ocrdb',
       username: 'emanuel',
-      password: 'Emi77',
+      password: 'emi77',
     );
   }
 
@@ -18,7 +18,7 @@ class base_de_datos_control {
 
     try {
       await connection.open();
-      ci = AESCrypt.encrypt(ci);
+      ci = AESCrypt.encriptar(ci);
       await connection.execute("DELETE FROM $nombre_de_tabla WHERE id_ci = '$ci'");
       print('Usuario eliminado exitosamente');
     } catch (e) {
@@ -35,15 +35,15 @@ class base_de_datos_control {
 
     try {
       await connection.open();
-      ci = AESCrypt.encrypt(ci);
+      ci = AESCrypt.encriptar(ci);
       final fecha =DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-      final ciEncriptado = AESCrypt.encrypt(dato[0]['C.I.']);
-      final nombreEncriptado = AESCrypt.encrypt(dato[0]['Nombre']);
-      final contrasennaEncriptada = AESCrypt.encrypt(dato[0]['Contraseña']);
-      final correoEncriptado = AESCrypt.encrypt(dato[0]['Correo Electrónico']);
-      final rolEncriptado = AESCrypt.encrypt(detras_de_rol(dato[0]['Rol']));
-      final telefonoEncriptado = AESCrypt.encrypt(dato[0]['Numero de Telefono']);
-      final fechaEncriptada = AESCrypt.encrypt(fecha);
+      final ciEncriptado = AESCrypt.encriptar(dato[0]['C.I.']);
+      final nombreEncriptado = AESCrypt.encriptar(dato[0]['Nombre']);
+      final contrasennaEncriptada = AESCrypt.encriptar(dato[0]['Contraseña']);
+      final correoEncriptado = AESCrypt.encriptar(dato[0]['Correo Electrónico']);
+      final rolEncriptado = AESCrypt.encriptar(detras_de_rol(dato[0]['Rol']));
+      final telefonoEncriptado = AESCrypt.encriptar(dato[0]['Numero de Telefono']);
+      final fechaEncriptada = AESCrypt.encriptar(fecha);
 
       await connection.query("UPDATE usuarios SET id_ci = '$ciEncriptado',"
           "nombre = '$nombreEncriptado',"
@@ -64,18 +64,17 @@ class base_de_datos_control {
 
   static Future<void> agregarDatos(String nombre_de_tabla, List<Map<String, dynamic>> datos) async {
     final connection = _getConnection();
-    print(datos);
 
     try {
       await connection.open();
       final fecha = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-      final ciEncriptado = AESCrypt.encrypt(datos[0]['C.I.']);
-      final nombreEncriptado = AESCrypt.encrypt(datos[0]['Nombre']);
-      final contrasennaEncriptada = AESCrypt.encrypt(datos[0]['Contraseña']);
-      final correoEncriptado = AESCrypt.encrypt(datos[0]['Correo Electrónico']);
-      final rolEncriptado = AESCrypt.encrypt(detras_de_rol(datos[1]['Rol']));
-      final telefonoEncriptado = AESCrypt.encrypt(datos[0]['Numero de Telefono']);
-      final fechaEncriptada = AESCrypt.encrypt(fecha);
+      final ciEncriptado = AESCrypt.encriptar(datos[0]['C.I.']);
+      final nombreEncriptado = AESCrypt.encriptar(datos[0]['Nombre']);
+      final contrasennaEncriptada = AESCrypt.encriptar(datos[0]['Contraseña']);
+      final correoEncriptado = AESCrypt.encriptar(datos[0]['Correo Electrónico']);
+      final rolEncriptado = AESCrypt.encriptar(detras_de_rol(datos[1]['Rol']));
+      final telefonoEncriptado = AESCrypt.encriptar(datos[0]['Numero de Telefono']);
+      final fechaEncriptada = AESCrypt.encriptar(fecha);
 
       await connection.query(
           "INSERT INTO $nombre_de_tabla (id_ci, nombre, contrasenna, correo_electronico, rol, numero_de_telefono, fecha_de_registro) "
@@ -100,13 +99,13 @@ class base_de_datos_control {
       final results = await connection.query("SELECT * FROM $nombre_de_tabla");
       return results.map<Map<String, dynamic>>((row) {
         return {
-          'C.I.': AESCrypt.decrypt(row[0]),
-          'Nombre': AESCrypt.decrypt(row[1]),
-          'Contraseña': AESCrypt.decrypt(row[2]),
-          'Correo Electrónico': AESCrypt.decrypt(row[3]),
-          'Rol': Vista_de_rol(AESCrypt.decrypt(row[4])),
-          'Fecha de Registro': AESCrypt.decrypt(row[5]),
-          'Numero de Telefono': AESCrypt.decrypt(row[6]),
+          'C.I.': AESCrypt.desencriptar(row[0]),
+          'Nombre': AESCrypt.desencriptar(row[1]),
+          'Contraseña': AESCrypt.desencriptar(row[2]),
+          'Correo Electrónico': AESCrypt.desencriptar(row[3]),
+          'Rol': Vista_de_rol(AESCrypt.desencriptar(row[4])),
+          'Fecha de Registro': AESCrypt.desencriptar(row[5]),
+          'Numero de Telefono': AESCrypt.desencriptar(row[6]),
         };
       }).toList();
     } catch (e) {
@@ -125,13 +124,13 @@ class base_de_datos_control {
       final results = await connection.query("SELECT * FROM $nombre_de_tabla WHERE id_ci = '$ci'");
       return results.map<Map<String, dynamic>>((row) {
         return {
-          'C.I.': AESCrypt.decrypt(row[0]),
-          'Nombre': AESCrypt.decrypt(row[1]),
-          'Contraseña': AESCrypt.decrypt(row[2]),
-          'Correo Electrónico': AESCrypt.decrypt(row[3]),
-          'Rol': Vista_de_rol(AESCrypt.decrypt(row[4])),
-          'Fecha de Registro': AESCrypt.decrypt(row[5]),
-          'Numero de Telefono': AESCrypt.decrypt(row[6]),
+          'C.I.': AESCrypt.desencriptar(row[0]),
+          'Nombre': AESCrypt.desencriptar(row[1]),
+          'Contraseña': AESCrypt.desencriptar(row[2]),
+          'Correo Electrónico': AESCrypt.desencriptar(row[3]),
+          'Rol': Vista_de_rol(AESCrypt.desencriptar(row[4])),
+          'Fecha de Registro': AESCrypt.desencriptar(row[5]),
+          'Numero de Telefono': AESCrypt.desencriptar(row[6]),
         };
       }).toList();
     } catch (e) {
@@ -168,6 +167,50 @@ class base_de_datos_control {
         return 'interesado_en_el_registro';
       default:
         return '';
+    }
+  }
+
+  static Future<String> obtenerEstado(String ci) async {
+
+    final connection = _getConnection();
+
+    try {
+      await connection.open();
+      final results = await connection.query("SELECT * FROM estado WHERE id_ci = '$ci'");
+      if (results.isNotEmpty) {
+        print(results.first[1]);
+        return results.first[1] as String;
+      }else{return '';}
+      // Si no se encontró ningún registro, se puede asumir que el usuario está activo por defecto.
+    } catch (e) {
+      print('Error al obtener el estado del usuario: $e');
+      return 'No se pudo obtener el estado';
+    } finally {
+      await connection.close();
+    }
+
+  }
+
+  static Future<void> cambiarEstado(String ci) async {
+    final connection = _getConnection();
+    ci = AESCrypt.encriptar(ci);
+
+    try {
+      await connection.open();
+      final results = await connection.query("SELECT * FROM estado WHERE id_ci = '$ci'");
+      if (results.isEmpty) {
+        // Si no se encontró ningún registro con el ci dado, podemos asumir que el usuario está inactivo.
+
+        await connection.query("INSERT INTO estado (id_ci, estado) VALUES ('$ci', 'activo')");
+      } else {
+        final estadoActual = results.first[1] as String;
+        final nuevoEstado = estadoActual == 'activo' ? 'inactivo' : 'activo';
+        await connection.query("UPDATE estado SET estado = '$nuevoEstado' WHERE id_ci = '$ci'");
+      }
+    } catch (e) {
+      print('Error al cambiar el estado del usuario: $e');
+    } finally {
+      await connection.close();
     }
   }
 

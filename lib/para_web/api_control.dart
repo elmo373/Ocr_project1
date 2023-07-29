@@ -5,7 +5,7 @@ import 'package:postgre_flutter/encriptacion.dart';
 
 class api_control {
   static Future<void> eliminarDatos(String nombre_de_tabla, String ci) async {
-    String Eci = AESCrypt.encrypt(ci);
+    String Eci = AESCrypt.encriptar(ci);
     final deleteUrl = 'https://durable-path-393614.uc.r.appspot.com/query/$nombre_de_tabla/delete/$Eci';
     print(Eci);
     final response = await http.delete(Uri.parse(deleteUrl));
@@ -22,14 +22,14 @@ class api_control {
   static Future<void> editarDatos(String nombre_de_tabla, String ci, List<Map<String, dynamic>> dato) async {
 
     final fecha = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-    final ciid = AESCrypt.encrypt(ci);
-    final ciEncriptado = AESCrypt.encrypt(dato[0]['C.I.']);
-    final nombreEncriptado = AESCrypt.encrypt(dato[0]['Nombre']);
-    final contrasennaEncriptada = AESCrypt.encrypt(dato[0]['Contraseña']);
-    final correoEncriptado = AESCrypt.encrypt(dato[0]['Correo Electrónico']);
-    final rolEncriptado = AESCrypt.encrypt(detras_de_rol(dato[0]['Rol']));
-    final telefonoEncriptado = AESCrypt.encrypt(dato[0]['Numero de Telefono']);
-    final fechaEncriptada = AESCrypt.encrypt(fecha.toString());
+    final ciid = AESCrypt.encriptar(ci);
+    final ciEncriptado = AESCrypt.encriptar(dato[0]['C.I.']);
+    final nombreEncriptado = AESCrypt.encriptar(dato[0]['Nombre']);
+    final contrasennaEncriptada = AESCrypt.encriptar(dato[0]['Contraseña']);
+    final correoEncriptado = AESCrypt.encriptar(dato[0]['Correo Electrónico']);
+    final rolEncriptado = AESCrypt.encriptar(detras_de_rol(dato[0]['Rol']));
+    final telefonoEncriptado = AESCrypt.encriptar(dato[0]['Numero de Telefono']);
+    final fechaEncriptada = AESCrypt.encriptar(fecha.toString());
 
     final updateUrl = 'https://durable-path-393614.uc.r.appspot.com/query/$nombre_de_tabla/update/$ciid';
     final Map<String, String> requestBody = {
@@ -62,13 +62,13 @@ class api_control {
   static Future<void> agregarDatos(String nombre_de_tabla, List<Map<String, dynamic>> datos) async {
 
     final fecha = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-    final ciEncriptado = AESCrypt.encrypt(datos[0]['C.I.']);
-    final nombreEncriptado = AESCrypt.encrypt(datos[0]['Nombre']);
-    final contrasennaEncriptada = AESCrypt.encrypt(datos[0]['Contraseña']);
-    final correoEncriptado = AESCrypt.encrypt(datos[0]['Correo Electrónico']);
-    final rolEncriptado = AESCrypt.encrypt(detras_de_rol(datos[1]['Rol']));
-    final telefonoEncriptado = AESCrypt.encrypt(datos[0]['Numero de Telefono']);
-    final fechaEncriptada = AESCrypt.encrypt(fecha);
+    final ciEncriptado = AESCrypt.encriptar(datos[0]['C.I.']);
+    final nombreEncriptado = AESCrypt.encriptar(datos[0]['Nombre']);
+    final contrasennaEncriptada = AESCrypt.encriptar(datos[0]['Contraseña']);
+    final correoEncriptado = AESCrypt.encriptar(datos[0]['Correo Electrónico']);
+    final rolEncriptado = AESCrypt.encriptar(detras_de_rol(datos[1]['Rol']));
+    final telefonoEncriptado = AESCrypt.encriptar(datos[0]['Numero de Telefono']);
+    final fechaEncriptada = AESCrypt.encriptar(fecha);
 
     final addUrl = 'https://durable-path-393614.uc.r.appspot.com/query/$nombre_de_tabla/insert';
     final Map<String, String> requestBody = {
@@ -109,13 +109,13 @@ class api_control {
 
       return jsonData.map<Map<String, dynamic>>((row) {
         return {
-          'C.I.': AESCrypt.decrypt(row['id_ci']),
-          'Nombre': AESCrypt.decrypt(row['nombre']),
-          'Contraseña': AESCrypt.decrypt(row['contrasenna']),
-          'Correo Electrónico': AESCrypt.decrypt(row['correo_electronico']),
-          'Rol': Vista_de_rol(AESCrypt.decrypt(row['rol'])),
-          'Fecha de Registro': AESCrypt.decrypt(row['fecha_de_registro']),
-          'Numero de Telefono': AESCrypt.decrypt(row['numero_de_telefono']),
+          'C.I.': AESCrypt.desencriptar(row['id_ci']),
+          'Nombre': AESCrypt.desencriptar(row['nombre']),
+          'Contraseña': AESCrypt.desencriptar(row['contrasenna']),
+          'Correo Electrónico': AESCrypt.desencriptar(row['correo_electronico']),
+          'Rol': Vista_de_rol(AESCrypt.desencriptar(row['rol'])),
+          'Fecha de Registro': AESCrypt.desencriptar(row['fecha_de_registro']),
+          'Numero de Telefono': AESCrypt.desencriptar(row['numero_de_telefono']),
         };
       }).toList();
     } else {
@@ -133,13 +133,13 @@ class api_control {
 
       return jsonData.map<Map<String, dynamic>>((row) {
         return {
-          'C.I.': AESCrypt.decrypt(row['id_ci']),
-          'Nombre': AESCrypt.decrypt(row['nombre']),
-          'Contraseña': AESCrypt.decrypt(row['contrasenna']),
-          'Correo Electrónico': AESCrypt.decrypt(row['correo_electronico']),
-          'Rol': Vista_de_rol(AESCrypt.decrypt(row['rol'])),
-          'Fecha de Registro': AESCrypt.decrypt(row['fecha_de_registro']),
-          'Numero de Telefono': AESCrypt.decrypt(row['numero_de_telefono']),
+          'C.I.': AESCrypt.desencriptar(row['id_ci']),
+          'Nombre': AESCrypt.desencriptar(row['nombre']),
+          'Contraseña': AESCrypt.desencriptar(row['contrasenna']),
+          'Correo Electrónico': AESCrypt.desencriptar(row['correo_electronico']),
+          'Rol': Vista_de_rol(AESCrypt.desencriptar(row['rol'])),
+          'Fecha de Registro': AESCrypt.desencriptar(row['fecha_de_registro']),
+          'Numero de Telefono': AESCrypt.desencriptar(row['numero_de_telefono']),
         };
       }).toList();
     } else {
@@ -162,6 +162,7 @@ class api_control {
         return '';
     }
   }
+
   static String detras_de_rol(String rol) {
     switch (rol) {
       case 'Administrador':
@@ -176,4 +177,5 @@ class api_control {
         return '';
     }
   }
+
 }

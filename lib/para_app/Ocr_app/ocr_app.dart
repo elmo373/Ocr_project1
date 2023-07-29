@@ -222,7 +222,6 @@ class _TextScannerState extends State<TextScanner> with WidgetsBindingObserver {
     final navigator = Navigator.of(context);
     final inputImage = InputImage.fromFile(file);
     final recognizedText = await textDetector.processImage(inputImage);
-    print(recognizedText);
     await navigator.push(
       MaterialPageRoute(
         builder: (context) => ResultScreen(text: recognizedText.text),

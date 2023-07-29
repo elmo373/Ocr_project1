@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:postgre_flutter/Encriptacion.dart';
 import 'package:postgre_flutter/para_windows/roles/editar.dart';
 import 'package:postgre_flutter/para_windows/base_de_datos_control.dart';
 
@@ -12,6 +13,7 @@ class _estado_de_usuariosState extends State<estado_de_usuarios> {
   String searchQuery = '';
   String nombre_de_tabla = 'usuarios';
   Map<String, dynamic>? editingUsuario;
+  Map<String, String> estadosUsuarios = {}; // Estado local de los usuarios
 
   @override
   void initState() {
@@ -21,6 +23,11 @@ class _estado_de_usuariosState extends State<estado_de_usuarios> {
 
   void obtenerUsuarios() async {
     usuarios = await base_de_datos_control.obtenerDatos(nombre_de_tabla);
+    // Obtener los estados de los usuarios y guardarlos en el estado local
+    for (final usuario in usuarios) {
+      final ci = AESCrypt.encriptar(usuario['C.I.'].toString());
+      estadosUsuarios[ci] = await base_de_datos_control.obtenerEstado(ci);
+    }
     setState(() {});
   }
 
@@ -37,6 +44,14 @@ class _estado_de_usuariosState extends State<estado_de_usuarios> {
   void eliminarUsuario(String ci) async {
     await base_de_datos_control.eliminarDatos(nombre_de_tabla, ci);
     obtenerUsuarios(); // Actualizar la lista de usuarios después de la eliminación
+  }
+
+  Future<void> cambiarEstadoUsuario(String ci) async {
+    final nuevoEstado = estadosUsuarios[ci] == 'activo' ? 'inactivo' : 'activo';
+    await base_de_datos_control.cambiarEstado(ci);
+    // Actualizar el estado local con el nuevo estado
+    estadosUsuarios[ci] = nuevoEstado;
+    setState(() {});
   }
 
   @override
@@ -104,7 +119,7 @@ class _estado_de_usuariosState extends State<estado_de_usuarios> {
                     ),
                     DataColumn(
                       label: Text(
-                        'Acciones',
+                        'Estado',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -149,15 +164,20 @@ class _estado_de_usuariosState extends State<estado_de_usuarios> {
                           DataCell(
                             Row(
                               children: [
-                                IconButton(
-                                  icon: Icon(Icons.delete),
-                                  color: Colors.redAccent,
-                                  onPressed: () {
-                                    Editores editores = Editores();
-                                    editores.Eliminador(context, nombre_de_tabla, eliminarUsuario, usuario['C.I.']);
-                                    obtenerUsuarios();
+                                // Reemplazar el IconButton con el Switch
+                                Switch(
+                                  value:  estadosUsuarios[AESCrypt.encriptar(usuario['C.I.'])] == 'activo',
+                                  onChanged: (value) async {
+                                    setState(() {
+                                      estadosUsuarios[AESCrypt.encriptar(usuario['C.I.'])] = value ? 'activo' : 'inactivo';
+                                    });
+                                    await cambiarEstadoUsuario(usuario['C.I.']);
                                   },
-                                ),
+                                  activeColor: estadosUsuarios[AESCrypt.encriptar(usuario['C.I.'])] == 'inactivo' ? Colors.green : Colors.grey,
+                                  inactiveThumbColor: estadosUsuarios[AESCrypt.encriptar(usuario['C.I.'])] == 'inactivo' ? Colors.grey : Colors.green,
+                                  activeTrackColor: estadosUsuarios[AESCrypt.encriptar(usuario['C.I.'])] == 'activo' ? Colors.lightGreenAccent : Colors.grey[300],
+                                  inactiveTrackColor: estadosUsuarios[AESCrypt.encriptar(usuario['C.I.'])] == 'activo' ? Colors.grey[300] : Colors.lightGreenAccent,
+                                )
                               ],
                             ),
                           ),
