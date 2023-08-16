@@ -34,16 +34,16 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
   Future<void> login() async {
     if (id_ci != '') {
       String id_ciE = AESCrypt.encriptar(id_ci);
-      final response = await api_control.obtenerDatosId("usuarios", id_ciE);
-      final String estado = await api_control.obtenerEstado(id_ciE);
 
-      // Suponemos que tienes estado y rol disponibles en tu código.
+      final response = await api_control.obtenerDatosId("usuarios", id_ciE);
+
+      final String estado = await api_control.obtenerEstado(id_ciE);
 
       if (response.isNotEmpty) {
         final usuario = response[0];
 
         if (usuario['Rol'] != 'Empresa' && estado == 'activo' && usuario['Contraseña'] == contrasenna) {
-          rol = usuario['Rol'];
+
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -113,11 +113,25 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Visibility(
+                visible: !(MediaQuery.of(context).viewInsets.bottom > 0),
+                child: Text(
+                  'Sistema de Digitalización del Registro para el manejo de explosivos',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'SIDIO',
+                style: TextStyle(fontSize: 40, color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 5),
               Text(
                 'Ingrese sus credenciales',
                 style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 15),
               Container(
                 padding: EdgeInsets.all(20),
                 margin: EdgeInsets.symmetric(horizontal: 40),
@@ -128,7 +142,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                 child: Column(
                   children: [
                     TextField(
-                      onChanged: (value) => id_ci = value,
+                      onChanged: (value) => id_ci = value,  // Especificando que es solo para números, asumiendo que CI es un número.
                       decoration: InputDecoration(
                         labelText: 'ID de usuario (CI)',
                         labelStyle: TextStyle(color: Color.fromRGBO(3, 72, 128, 1), fontWeight: FontWeight.bold),
@@ -166,5 +180,4 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
       ),
     );
   }
-
 }

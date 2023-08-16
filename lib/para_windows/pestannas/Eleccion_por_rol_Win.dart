@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:postgre_flutter/para_windows/pestannas/opciones/gestion_de_documentos.dart';
 import 'package:postgre_flutter/para_windows/pestannas/opciones/gestion_de_usuarios.dart';
-import 'package:postgre_flutter/para_windows/roles/main_administrador_windows.dart';
-import 'package:postgre_flutter/para_windows/roles/main_personal_windows.dart';
+import 'package:postgre_flutter/para_windows/roles/otras/estado_de_registro_otros.dart';
+import 'package:postgre_flutter/para_windows/roles/otras/lista_de_documento_otros.dart';
+import 'package:postgre_flutter/para_windows/roles/otras/lista_de_usuarios_otros.dart';
+import 'package:postgre_flutter/para_windows/roles/otras/seguimiento.dart';
+import 'opciones/reportes.dart';
 
-Widget buildTabContent(int index, String rol) {
-  switch (rol) {
+Widget buildTabContent(int index, Map<String, dynamic> datos) {
+  switch (datos["Rol"]) {
     case 'Administrador':
       switch (index) {
         case 0:
           return gestion_de_usuario();
+        case 1:
+          return gestion_de_documentos();
+        case 3:
+          return gestion_de_reportes();
+        case 2:
+          return seguimiento();
         default:
           return Container(
             color: Color.fromRGBO(3, 72, 128, 1),
@@ -23,9 +33,10 @@ Widget buildTabContent(int index, String rol) {
     case 'Personal':
       switch (index) {
         case 0:
-        // Aquí debes retornar el widget correspondiente al rol 'Personal'
-        // Por ejemplo: return WindowsPersonalMain();
-          return WindowsPersonalListaDeUsuarios();
+          return lista_de_usuarios_otros();
+        case 1:
+          return lista_de_documentos_otros();
+
         default:
           return Container(
             color: Color.fromRGBO(3, 72, 128, 1),
@@ -40,9 +51,11 @@ Widget buildTabContent(int index, String rol) {
     case 'Técnico':
       switch (index) {
         case 0:
-        // Aquí debes retornar el widget correspondiente al rol 'Técnico'
-        // Por ejemplo: return WindowsTecnicoMain();
-          return Container();
+          return lista_de_usuarios_otros();
+        case 1:
+          return lista_de_documentos_otros();
+        case 2:
+          return gestion_de_reportes();
         default:
           return Container(
             color: Color.fromRGBO(3, 72, 128, 1),
@@ -54,12 +67,10 @@ Widget buildTabContent(int index, String rol) {
             ),
           );
       }
-    case 'En Trámite para el Registro':
+    case 'Empresa':
       switch (index) {
         case 0:
-        // Aquí debes retornar el widget correspondiente al rol 'En Trámite para el Registro'
-        // Por ejemplo: return WindowsTramiteMain();
-          return Container();
+          return estado_de_registro_otros(datos: datos);
         default:
           return Container(
             color: Color.fromRGBO(3, 72, 128, 1),

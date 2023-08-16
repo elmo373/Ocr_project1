@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:postgre_flutter/para_web/main_web.dart';
 import 'package:postgre_flutter/para_web/pestannas/Eleccion_por_rol_Web.dart';
-void main(){
-  runApp(WindowsPestannas(rol: 'Administrador'));
-}
-class WindowsPestannas extends StatelessWidget {
-  final String rol;
 
-  WindowsPestannas({required this.rol});
+class WindowsPestannas extends StatelessWidget {
+  final Map<String, dynamic> datos;
+
+  WindowsPestannas({required this.datos});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: WindowsHomePage(rol: rol),
+      debugShowCheckedModeBanner: false,
+      home: WindowsHomePage(datos: datos),
     );
   }
 }
 
 class WindowsHomePage extends StatefulWidget {
-  final String rol;
+  final Map<String, dynamic> datos;
 
-  WindowsHomePage({required this.rol});
+  WindowsHomePage({required this.datos});
 
   @override
   _WindowsHomePageState createState() => _WindowsHomePageState();
@@ -30,31 +29,28 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
   int _selectedIndex = 0;
 
   List<String> _getTabTitles() {
-    switch (widget.rol) {
+    switch (widget.datos['Rol']) {
       case 'Administrador':
         return [
           'Gestión de usuarios',
-          'Reportes de usuarios',
           'Gestión de Documentos',
-          'Solicitudes de registro',
-          'Rol de trabajos',
+          'Seguimiento',
+          'Reportes',
         ];
       case 'Personal':
         return [
           'Lista de usuarios',
           'Lista de Documentos',
-          'Rol de trabajos',
         ];
       case 'Técnico':
         return [
           'Lista de usuarios',
           'Lista de Documentos',
-          'Rol de trabajos',
+          'Reportes',
         ];
-      case 'En Trámite para el Registro':
+      case 'Empresa':
         return [
-          'Solicitud de registro',
-          'Personal de transporte',
+          'Estado de registro',
         ];
       default:
         return [];
@@ -108,7 +104,6 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                         );
                       },
                     )
-
                 ),
                 Container(
                   color: Color.fromRGBO(3, 72, 128, 1),
@@ -116,14 +111,64 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                   height: 90,
                   child: IconButton(
                     icon: Icon(
-                      Icons.arrow_back,
+                      Icons.person,
                       color: Colors.white,
                       size: 32,
                     ),
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => WebApp()),
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text('Datos del Usuario'),
+                            content: SingleChildScrollView(
+                              child: ListBody(
+                                children: widget.datos.entries.map((entry) {
+                                  return Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text.rich(
+                                      TextSpan(
+                                        text: '${entry.key}:\n',
+                                        style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromRGBO(3, 72, 128, 1)),
+                                        children: <TextSpan>[
+                                          TextSpan(
+                                            text: '${entry.value}',
+                                            style: TextStyle(color: Color.fromRGBO(53, 122, 178, 1)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: Text('Atrás', style: TextStyle(color: Colors.white)),
+                                style: ButtonStyle(
+                                  backgroundColor: MaterialStateProperty.all(Color.fromRGBO(3, 72, 128, 1)),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => WebApp(),
+                                    ),
+                                  );
+                                },
+                                child: Text('Cerrar sesión', style: TextStyle(color: Colors.white)),
+                                style: ButtonStyle(
+                                  backgroundColor: MaterialStateProperty.all(Color.fromRGBO(3, 72, 128, 1)),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       );
                     },
                   ),
@@ -132,7 +177,7 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
             ),
           ),
           Expanded(
-            child: buildTabContent(_selectedIndex, widget.rol),
+            child: buildTabContent(_selectedIndex, widget.datos),
           ),
         ],
       ),

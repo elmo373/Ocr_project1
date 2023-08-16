@@ -8,17 +8,15 @@ import 'package:image_picker/image_picker.dart';
 
 import 'estado_del_ocr.dart';
 
-void main(){
-  runApp(TextScanner());
-}
-
-
 class TextScanner extends StatefulWidget {
-  const TextScanner({Key? key}) : super(key: key);
+  final Map<String, dynamic> datos;
+
+  const TextScanner({Key? key, required this.datos}) : super(key: key);
 
   @override
   State<TextScanner> createState() => _TextScannerState();
 }
+
 
 class _TextScannerState extends State<TextScanner> with WidgetsBindingObserver {
   bool isPermissionGranted = false;
@@ -64,12 +62,8 @@ class _TextScannerState extends State<TextScanner> with WidgetsBindingObserver {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: Text('OCR'),
+          title: Text('Digitalizar Registro'),
           backgroundColor: Color.fromRGBO(3, 72, 128, 1),
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
         ),
         body: Directionality(
           textDirection: TextDirection.ltr,
@@ -224,8 +218,9 @@ class _TextScannerState extends State<TextScanner> with WidgetsBindingObserver {
     final recognizedText = await textDetector.processImage(inputImage);
     await navigator.push(
       MaterialPageRoute(
-        builder: (context) => ResultScreen(text: recognizedText.text),
+        builder: (context) => PantallaResultado(texto: recognizedText.text, datos: widget.datos, archivo: file),
       ),
     );
   }
+
 }

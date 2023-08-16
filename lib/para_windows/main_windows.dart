@@ -3,9 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:postgre_flutter/Encriptacion.dart';
 import 'package:postgre_flutter/para_windows/base_de_datos_control.dart';
 import 'package:postgre_flutter/para_windows/pestannas/pestannas_Win.dart';
-void main(){
-  runApp(WindowsApp());
-}
+
+
 class WindowsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -13,77 +12,85 @@ class WindowsApp extends StatelessWidget {
     SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
 
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
-        body: WindowsHomePage(),
+        body: PaginaPrincipalWindows(),
       ),
     );
   }
 }
 
-class WindowsHomePage extends StatefulWidget {
+class PaginaPrincipalWindows extends StatefulWidget {
   @override
-  _WindowsHomePageState createState() => _WindowsHomePageState();
+  _PaginaPrincipalWindowsState createState() => _PaginaPrincipalWindowsState();
 }
 
-class _WindowsHomePageState extends State<WindowsHomePage> {
-  String id_ci = '';
-  String contrasenna = '';
+class _PaginaPrincipalWindowsState extends State<PaginaPrincipalWindows> {
+  String idCi = '';
+  String contrasena = '';
   String rol = '';
   String nombre = '';
+  late final FocusNode miNodoFoco;
 
-  Future<void> login() async {
-    if (id_ci != '') {
-      String id_ciE = AESCrypt.encriptar(id_ci);
-      final response = await base_de_datos_control.obtenerDatosID("usuarios", id_ciE);
-      final String estado = await base_de_datos_control.obtenerEstado(id_ciE);
+  @override
+  void initState() {
+    super.initState();
+    miNodoFoco = FocusNode();
+  }
 
-      if (response.isNotEmpty) {
-        final usuario = response[0];
+  @override
+  void dispose() {
+    miNodoFoco.dispose();
+    super.dispose();
+  }
 
-        if (estado == 'activo' && usuario['Contraseña'] == contrasenna) {
+  Future<void> iniciarSesion() async {
+    if (idCi != '') {
+      String idCiE = AESCrypt.encriptar(idCi);
+      final respuesta = await base_de_datos_control.obtenerDatosID("usuarios", idCiE);
+      final String estado = await base_de_datos_control.obtenerEstado(idCiE);
+
+      if (respuesta.isNotEmpty) {
+        final usuario = respuesta[0];
+
+        if (estado == 'activo' && usuario['Contraseña'] == contrasena) {
           rol = usuario['Rol'];
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => WindowsPestannas(rol: rol),
+              builder: (context) => WindowsPestannas(datos: usuario),
             ),
           );
         } else {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('Error de inicio de sesión'),
-              content: Text('Los datos proporcionados son incorrectos.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Aceptar'),
-                ),
-              ],
-            ),
-          );
+          mostrarErrorInicioSesion();
         }
       } else {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Error de inicio de sesión'),
-            content: Text('Los datos proporcionados son incorrectos.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Aceptar'),
-              ),
-            ],
-          ),
-        );
+        mostrarErrorInicioSesion();
       }
     }
     setState(() {});
   }
 
+  void mostrarErrorInicioSesion() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error de inicio de sesión'),
+        content: Text('Los datos proporcionados son incorrectos.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Aceptar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    double ancho = MediaQuery.of(context).size.width;
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -103,15 +110,29 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+
+            // Cambios realizados aquí:
             children: [
               Text(
-                'Ingrese sus credenciales',
-                style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
+                'Sistema de Digitalización del Registro para el manejo de explosivos',
+                style: TextStyle(fontSize: 35, color: Colors.white, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 8),
+              Text(
+                'SIDIO',
+                style: TextStyle(fontSize: 60, color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 15),
+
+              Text(
+                'Ingrese sus credenciales',
+                style: TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold), // Original era 32, ahora es 30
+              ),
+              SizedBox(height: 30),
+
               Container(
+                width: ancho * 0.6,
                 padding: EdgeInsets.all(20),
-                margin: EdgeInsets.symmetric(horizontal: 40),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -119,20 +140,24 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
                 child: Column(
                   children: [
                     TextField(
-                      onChanged: (value) => id_ci = value,
+                      onChanged: (value) => idCi = value,
                       decoration: InputDecoration(
                         labelText: 'ID de usuario (CI)',
-                        labelStyle: TextStyle(color: Color.fromRGBO(3, 72, 128, 1), fontWeight: FontWeight.bold),
+                        labelStyle: TextStyle(fontSize: 22, color: Color.fromRGBO(3, 72, 128, 1), fontWeight: FontWeight.bold),
                       ),
                       style: TextStyle(color: Color.fromRGBO(3, 72, 128, 1)),
                     ),
                     SizedBox(height: 10),
                     TextField(
-                      onChanged: (value) => contrasenna = value,
+                      focusNode: miNodoFoco,
+                      onChanged: (value) => contrasena = value,
                       obscureText: true,
+                      onSubmitted: (value) {
+                        iniciarSesion();
+                      },
                       decoration: InputDecoration(
                         labelText: 'Contraseña',
-                        labelStyle: TextStyle(color: Color.fromRGBO(3, 72, 128, 1), fontWeight: FontWeight.bold),
+                        labelStyle: TextStyle(fontSize: 22, color: Color.fromRGBO(3, 72, 128, 1), fontWeight: FontWeight.bold),
                       ),
                       style: TextStyle(color: Color.fromRGBO(3, 72, 128, 1)),
                     ),
@@ -142,9 +167,12 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  login();
+                  iniciarSesion();
                 },
-                child: Text('Iniciar sesión'),
+                child: Text(
+                  'Iniciar sesión',
+                  style: TextStyle(fontSize: 20),
+                ),
                 style: ElevatedButton.styleFrom(
                   primary: Colors.white,
                   onPrimary: Color.fromRGBO(3, 72, 128, 1),
@@ -157,4 +185,5 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
       ),
     );
   }
+
 }

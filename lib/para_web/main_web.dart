@@ -15,85 +15,82 @@ class WebApp extends StatelessWidget {
     SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
 
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
-        body: WindowsHomePage(),
+        body: WebHomePage(),
       ),
     );
   }
 }
 
-class WindowsHomePage extends StatefulWidget {
+class WebHomePage extends StatefulWidget {
   @override
-  _WindowsHomePageState createState() => _WindowsHomePageState();
+  _WebHomePageState createState() => _WebHomePageState();
 }
 
-class _WindowsHomePageState extends State<WindowsHomePage> {
-  String id_ci = '';
+class _WebHomePageState extends State<WebHomePage> {
+  String usuarioId = '';
   String contrasenna = '';
-  String rol = '';
-  String nombre = '';
+  String role = '';
 
-  Future<void> login() async {
-    if (id_ci != '') {
-      String id_ciE = AESCrypt.encriptar(id_ci);
-      final response = await api_control.obtenerDatosId("usuarios", id_ciE);
+  late final FocusNode miNodoFoco;
 
+  @override
+  void initState() {
+    super.initState();
+    miNodoFoco = FocusNode();
+  }
 
+  @override
+  void dispose() {
+    miNodoFoco.dispose();
+    super.dispose();
+  }
+
+  Future<void> loginusuario() async {
+    if (usuarioId != '') {
+      String encryptedusuarioId = AESCrypt.encriptar(usuarioId);
+      final response = await api_control.obtenerDatosId("usuarios", encryptedusuarioId);
 
       if (response.isNotEmpty) {
         final usuario = response[0];
         if (usuario['Contraseña'] == contrasenna) {
-          rol = usuario['Rol'];
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => WindowsPestannas(rol: rol),
+              builder: (context) => WindowsPestannas(datos:usuario),
             ),
           );
         } else {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('Error de inicio de sesión'),
-              content: Text('Los datos proporcionados son incorrectos.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Aceptar'),
-                ),
-              ],
-            ),
-          );
+          _showErrorDialog('Los datos proporcionados son incorrectos.');
         }
       } else {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Error de inicio de sesión'),
-            content: Text('El ID de usuario proporcionado no existe.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Aceptar'),
-              ),
-            ],
-          ),
-        );
+        _showErrorDialog('El ID de usuario proporcionado no existe.');
       }
     }
     setState(() {});
   }
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    });
+  void _showErrorDialog(String errorMessage) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Error de inicio de sesión'),
+        content: Text(errorMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Aceptar'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    double ancho = MediaQuery.of(context).size.width;
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -113,48 +110,69 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+
+            // Cambios realizados aquí:
             children: [
               Text(
+                'Sistema de Digitalización del Registro para el manejo de explosivos',
+                style: TextStyle(fontSize: 35, color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'SIDIO',
+                style: TextStyle(fontSize: 60, color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 15),
+
+              Text(
                 'Ingrese sus credenciales',
-                style: TextStyle(fontSize: 20, color: Colors.white),
+                style: TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold), // Original era 32, ahora es 30
               ),
-              SizedBox(height: 20),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 40),
-                child: TextField(
-                  onChanged: (value) => id_ci = value,
-                  decoration: InputDecoration(
-                    labelText: 'ID de usuario (CI)',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: TextStyle(color: Colors.white),
+              SizedBox(height: 30),
+
+              Container(
+                width: ancho * 0.6,
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
                 ),
-              ),
-              SizedBox(height: 10),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 40),
-                child: TextField(
-                  onChanged: (value) => contrasenna = value,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Contraseña',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
+                child: Column(
+                  children: [
+                    TextField(
+                      onChanged: (value) => usuarioId = value,
+                      decoration: InputDecoration(
+                        labelText: 'ID de usuario (CI)',
+                        labelStyle: TextStyle(fontSize: 22, color: Color.fromRGBO(3, 72, 128, 1), fontWeight: FontWeight.bold),
+                      ),
+                      style: TextStyle(color: Color.fromRGBO(3, 72, 128, 1)),
                     ),
-                  ),
-                  style: TextStyle(color: Colors.white),
+                    SizedBox(height: 10),
+                    TextField(
+                      focusNode: miNodoFoco,
+                      onChanged: (value) => contrasenna = value,
+                      obscureText: true,
+                      onSubmitted: (value) {
+                        loginusuario();
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Contraseña',
+                        labelStyle: TextStyle(fontSize: 22, color: Color.fromRGBO(3, 72, 128, 1), fontWeight: FontWeight.bold),
+                      ),
+                      style: TextStyle(color: Color.fromRGBO(3, 72, 128, 1)),
+                    ),
+                  ],
                 ),
               ),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  login();
+                  loginusuario();
                 },
-                child: Text('Iniciar sesión'),
+                child: Text(
+                  'Iniciar sesión',
+                  style: TextStyle(fontSize: 20),
+                ),
                 style: ElevatedButton.styleFrom(
                   primary: Colors.white,
                   onPrimary: Color.fromRGBO(3, 72, 128, 1),
@@ -167,4 +185,5 @@ class _WindowsHomePageState extends State<WindowsHomePage> {
       ),
     );
   }
+
 }

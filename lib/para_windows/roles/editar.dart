@@ -65,7 +65,7 @@ class Editores {
                       if (key == 'Fecha de Registro') {
                         return SizedBox.shrink();
                       } else if (key == 'Rol') {
-                        if (usuario[key] == 'En Trámite para el Registro') {
+                        if (usuario[key] == 'Empresa') {
                           return SizedBox.shrink();
                         } else {
                           return Column(

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:postgre_flutter/Encriptacion.dart';
-import 'package:postgre_flutter/para_windows/roles/editar.dart';
 import 'package:postgre_flutter/para_windows/base_de_datos_control.dart';
 
 class estado_de_usuarios extends StatefulWidget {
@@ -10,10 +8,20 @@ class estado_de_usuarios extends StatefulWidget {
 
 class _estado_de_usuariosState extends State<estado_de_usuarios> {
   List<Map<String, dynamic>> usuarios = [];
+  List<Map<String, dynamic>> estados = [];
   String searchQuery = '';
   String nombre_de_tabla = 'usuarios';
   Map<String, dynamic>? editingUsuario;
   Map<String, String> estadosUsuarios = {}; // Estado local de los usuarios
+  ScrollController _scrollController = ScrollController();
+
+  final Map<String, String> titulosColumnas = {
+    'C.I.': 'C.I.',
+    'Nombre': 'Nombre',
+    'Correo Electrónico': 'Correo Electrónico',
+    'Rol': 'Rol',
+    'Numero de Telefono': 'Número de Teléfono'
+  };
 
   @override
   void initState() {
@@ -23,11 +31,7 @@ class _estado_de_usuariosState extends State<estado_de_usuarios> {
 
   void obtenerUsuarios() async {
     usuarios = await base_de_datos_control.obtenerDatos(nombre_de_tabla);
-    // Obtener los estados de los usuarios y guardarlos en el estado local
-    for (final usuario in usuarios) {
-      final ci = AESCrypt.encriptar(usuario['C.I.'].toString());
-      estadosUsuarios[ci] = await base_de_datos_control.obtenerEstado(ci);
-    }
+    estados = await base_de_datos_control.obtenerEstadolista();
     setState(() {});
   }
 
@@ -41,17 +45,9 @@ class _estado_de_usuariosState extends State<estado_de_usuarios> {
     }
   }
 
-  void eliminarUsuario(String ci) async {
-    await base_de_datos_control.eliminarDatos(nombre_de_tabla, ci);
-    obtenerUsuarios(); // Actualizar la lista de usuarios después de la eliminación
-  }
-
   Future<void> cambiarEstadoUsuario(String ci) async {
-    final nuevoEstado = estadosUsuarios[ci] == 'activo' ? 'inactivo' : 'activo';
     await base_de_datos_control.cambiarEstado(ci);
-    // Actualizar el estado local con el nuevo estado
-    estadosUsuarios[ci] = nuevoEstado;
-    setState(() {});
+    obtenerUsuarios();
   }
 
   @override
@@ -61,9 +57,20 @@ class _estado_de_usuariosState extends State<estado_de_usuarios> {
     return Scaffold(
       body: Container(
         color: Color.fromRGBO(3, 72, 128, 1),
+        width: MediaQuery.of(context).size.width,
         child: Column(
           children: [
+            Text(
+              'Estado de usuarios',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 4),
             Container(
+              width: MediaQuery.of(context).size.width * 0.4,
               color: Color.fromRGBO(3, 72, 128, 1),
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
@@ -71,15 +78,13 @@ class _estado_de_usuariosState extends State<estado_de_usuarios> {
                   IconButton(
                     icon: Icon(Icons.search),
                     color: Colors.white,
-                    onPressed: () {
-                      // Aquí puedes implementar la lógica adicional que desees al hacer clic en la lupa
-                    },
+                    onPressed: () {},
                   ),
                   Text(
                     'Buscar:',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 22,
                     ),
                   ),
                   SizedBox(width: 8),
@@ -101,92 +106,113 @@ class _estado_de_usuariosState extends State<estado_de_usuarios> {
               ),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: filteredUsuarios.isNotEmpty
-                    ? DataTable(
-                  columns: [
-                    ...filteredUsuarios.first.keys.map(
-                          (String key) => DataColumn(
-                        label: Text(
-                          key,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Text(
-                        'Estado',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ),
-                  ],
-                  rows: filteredUsuarios.map(
-                        (Map<String, dynamic> usuario) {
-                      final usuarioId = usuario['C.I.']; // Reemplaza con el identificador único del usuario
-
-                      return DataRow(
-                        cells: [
-                          ...usuario.keys.map(
-                                (String key) {
-                              final cellValue = key == 'Fecha de Registro'
-                                  ? '${usuario[key]}'.substring(0, 19)
-                                  : '${usuario[key]}';
-
-                              if (editingUsuario != null && editingUsuario!['C.I.'] == usuarioId) {
-                                return DataCell(
-                                  TextField(
-                                    onChanged: (value) {
-                                      setState(() {
-                                        editingUsuario![key] = value;
-                                      });
-                                    },
-                                    controller: TextEditingController(text: editingUsuario![key]),
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                );
-                              }
-
-                              return DataCell(
-                                Text(
-                                  cellValue,
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              );
-                            },
-                          ),
-                          DataCell(
-                            Row(
-                              children: [
-                                // Reemplazar el IconButton con el Switch
-                                Switch(
-                                  value:  estadosUsuarios[AESCrypt.encriptar(usuario['C.I.'])] == 'activo',
-                                  onChanged: (value) async {
-                                    setState(() {
-                                      estadosUsuarios[AESCrypt.encriptar(usuario['C.I.'])] = value ? 'activo' : 'inactivo';
-                                    });
-                                    await cambiarEstadoUsuario(usuario['C.I.']);
-                                  },
-                                  activeColor: estadosUsuarios[AESCrypt.encriptar(usuario['C.I.'])] == 'inactivo' ? Colors.green : Colors.grey,
-                                  inactiveThumbColor: estadosUsuarios[AESCrypt.encriptar(usuario['C.I.'])] == 'inactivo' ? Colors.grey : Colors.green,
-                                  activeTrackColor: estadosUsuarios[AESCrypt.encriptar(usuario['C.I.'])] == 'activo' ? Colors.lightGreenAccent : Colors.grey[300],
-                                  inactiveTrackColor: estadosUsuarios[AESCrypt.encriptar(usuario['C.I.'])] == 'activo' ? Colors.grey[300] : Colors.lightGreenAccent,
-                                )
-                              ],
+              child: Scrollbar(
+                isAlwaysShown: true,
+                controller: _scrollController,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  scrollDirection: Axis.horizontal,
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minWidth: 1000),
+                          child: filteredUsuarios.isNotEmpty
+                              ? Theme(
+                            data: Theme.of(context).copyWith(
+                              dividerColor: Color.fromRGBO(53, 122, 178, 1),
+                              canvasColor: Color.fromRGBO(53, 122, 178, 1),
                             ),
-                          ),
-                        ],
-                      );
-                    },
-                  ).toList(),
-                )
-                    : Container(),
+                            child: DataTable(
+                              columns: [
+                                ...titulosColumnas.keys.map(
+                                      (String key) => DataColumn(
+                                    label: Text(
+                                      titulosColumnas[key]!,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: Text(
+                                    'Estado',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              rows: filteredUsuarios.map(
+                                    (Map<String, dynamic> usuario) {
+                                  final usuarioId = usuario['C.I.'];
+
+                                  return DataRow(
+                                    color: MaterialStateProperty.resolveWith<Color>(
+                                          (Set<MaterialState> states) {
+                                        return Colors.grey[350]!;  // Color para las filas de datos
+                                      },
+                                    ),
+                                    cells: [
+                                      ...titulosColumnas.keys.map(
+                                            (String key) {
+                                          final cellValue = '${usuario[key]}';
+                                          return DataCell(
+                                            Text(
+                                              cellValue,
+                                              style: TextStyle(color: Colors.black),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      DataCell(
+                                        Row(
+                                          children: [
+                                            Switch(
+                                              value: estados.firstWhere((estado) => estado['C.I.'] == usuario['C.I.'])['Estado'] == 'activo',
+                                              onChanged: (value) async {
+                                                setState(() {
+                                                  estados.firstWhere((estado) => estado['C.I.'] == usuario['C.I.'])['Estado'] = value ? 'activo' : 'inactivo';
+                                                });
+                                                await cambiarEstadoUsuario(usuario['C.I.']);
+                                              },
+                                              activeColor: Colors.orange,
+                                              inactiveThumbColor: Colors.grey,
+                                              activeTrackColor: Color.fromARGB(255, 232, 171, 92),
+                                              inactiveTrackColor: Colors.grey[300],
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ).toList(),
+                              dividerThickness: 1.0,
+                              horizontalMargin: 10.0,
+                              columnSpacing: 10.0,
+                              dataRowHeight: 45.0,
+                              headingRowColor: MaterialStateProperty.resolveWith<Color>(
+                                    (Set<MaterialState> states) {
+                                  return Color.fromRGBO(53, 122, 178, 1); // Color para el encabezado
+                                },
+                              ),
+                            ),
+                          )
+                              : Container(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

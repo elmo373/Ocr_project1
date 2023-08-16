@@ -1,0 +1,44 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-ocrflutter-dev-192324-authRole",
+      "UnauthRoleArn": "arn:aws:iam::756813362395:role/amplify-ocrflutter-dev-192324-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::756813362395:role/amplify-ocrflutter-dev-192324-authRole",
+      "Region": "us-east-2",
+      "DeploymentBucketName": "amplify-ocrflutter-dev-192324-deployment",
+      "UnauthRoleName": "amplify-ocrflutter-dev-192324-unauthRole",
+      "StackName": "amplify-ocrflutter-dev-192324",
+      "StackId": "arn:aws:cloudformation:us-east-2:756813362395:stack/amplify-ocrflutter-dev-192324/168402f0-2f30-11ee-88d5-021ca34cbd99",
+      "AmplifyAppId": "d1jzj0b7r1tjf3"
+    },
+    "categories": {
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "d1jzj0b7r1tjf3",
+          "type": "manual"
+        }
+      }
+    }
+  },
+  "ocrweb": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-ocrflutter-ocrweb-93631-authRole",
+      "UnauthRoleArn": "arn:aws:iam::756813362395:role/amplify-ocrflutter-ocrweb-93631-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::756813362395:role/amplify-ocrflutter-ocrweb-93631-authRole",
+      "Region": "us-east-2",
+      "DeploymentBucketName": "amplify-ocrflutter-ocrweb-93631-deployment",
+      "UnauthRoleName": "amplify-ocrflutter-ocrweb-93631-unauthRole",
+      "StackName": "amplify-ocrflutter-ocrweb-93631",
+      "StackId": "arn:aws:cloudformation:us-east-2:756813362395:stack/amplify-ocrflutter-ocrweb-93631/456c6680-2fa7-11ee-94ce-02e79328ebfd",
+      "AmplifyAppId": "d15pcj1w5qmutq"
+    },
+    "categories": {
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "d15pcj1w5qmutq",
+          "type": "manual"
+        }
+      }
+    }
+  }
+}

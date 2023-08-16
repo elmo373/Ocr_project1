@@ -9,46 +9,66 @@ class edicion_de_usuario extends StatefulWidget {
 
 class _edicion_de_usuarioState extends State<edicion_de_usuario> {
   List<Map<String, dynamic>> usuarios = [];
-  String searchQuery = '';
+  String consultaBusqueda = '';
   String nombre_de_tabla = 'usuarios';
-  Map<String, dynamic>? editingUsuario;
+  ScrollController controlScroll = ScrollController();
+
+  final Map<String, String> titulosColumnas = {
+    "C.I.": "C.I.",
+    'Nombre': 'Nombre',
+    'Contraseña': 'Contraseña',
+    'Correo Electrónico': 'Correo Electrónico',
+    'Rol': 'Rol',
+    'Numero de Telefono': 'Número de Teléfono'
+  };
 
   @override
   void initState() {
     super.initState();
-    obtenerUsuarios();
+    cargarUsuarios();
   }
 
-  void obtenerUsuarios() async {
+  void cargarUsuarios() async {
     usuarios = await base_de_datos_control.obtenerDatos(nombre_de_tabla);
     setState(() {});
   }
 
-  List<Map<String, dynamic>> getFilteredUsuarios() {
-    if (searchQuery.isEmpty) {
+  void editarUsuario(String ci, dynamic dato) async {
+    await base_de_datos_control.editarDatos(nombre_de_tabla, ci, dato);
+    cargarUsuarios(); // Actualizar la lista de usuarios después de la eliminación
+  }
+
+  List<Map<String, dynamic>> obtenerUsuariosFiltrados() {
+    if (consultaBusqueda.isEmpty) {
       return usuarios;
     } else {
       return usuarios.where((usuario) {
-        return usuario.values.any((value) => value.toString().toLowerCase().contains(searchQuery.toLowerCase()));
+        return usuario.values.any((value) => value.toString().toLowerCase().contains(consultaBusqueda.toLowerCase()));
       }).toList();
     }
   }
 
-  void editarUsuario(String ci, dynamic dato) async {
-    await base_de_datos_control.editarDatos(nombre_de_tabla, ci, dato);
-    obtenerUsuarios(); // Actualizar la lista de usuarios después de la eliminación
-  }
-
   @override
   Widget build(BuildContext context) {
-    final filteredUsuarios = getFilteredUsuarios();
+    final usuariosFiltrados = obtenerUsuariosFiltrados();
 
     return Scaffold(
       body: Container(
         color: Color.fromRGBO(3, 72, 128, 1),
+        width: MediaQuery.of(context).size.width,
         child: Column(
           children: [
+            Text(
+              'Edición de usuarios',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 4),
             Container(
+              width: MediaQuery.of(context).size.width * 0.4,
               color: Color.fromRGBO(3, 72, 128, 1),
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
@@ -56,21 +76,19 @@ class _edicion_de_usuarioState extends State<edicion_de_usuario> {
                   IconButton(
                     icon: Icon(Icons.search),
                     color: Colors.white,
-                    onPressed: () {
-                      // Aquí puedes implementar la lógica adicional que desees al hacer clic en la lupa
-                    },
+                    onPressed: () {},
                   ),
                   Text(
                     'Buscar:',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 22,
                     ),
                   ),
                   SizedBox(width: 8),
                   Expanded(
                     child: TextField(
-                      onChanged: (value) => setState(() => searchQuery = value),
+                      onChanged: (value) => setState(() => consultaBusqueda = value),
                       style: TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         enabledBorder: UnderlineInputBorder(
@@ -86,86 +104,84 @@ class _edicion_de_usuarioState extends State<edicion_de_usuario> {
               ),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: filteredUsuarios.isNotEmpty
-                    ? DataTable(
-                  columns: [
-                    ...filteredUsuarios.first.keys.map(
-                          (String key) => DataColumn(
-                        label: Text(
-                          key,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                          ),
-                        ),
+              child: Scrollbar(
+                isAlwaysShown: true,
+                controller: controlScroll,
+                child: SingleChildScrollView(
+                  controller: controlScroll,
+                  scrollDirection: Axis.horizontal,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: Directionality(
+                        textDirection: TextDirection.ltr,
+                    child: Theme(
+                      data: ThemeData(
+                        dividerColor: Colors.white,  // Esto personaliza el color de los divisores en el DataTable
                       ),
-                    ),
-                    DataColumn(
-                      label: Text(
-                        'Editar',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ),
-                  ],
-                  rows: filteredUsuarios.map(
-                        (Map<String, dynamic> usuario) {
-                      final usuarioId = usuario['C.I.']; // Reemplaza con el identificador único del usuario
-
-                      return DataRow(
-                        cells: [
-                          ...usuario.keys.map(
-                                (String key) {
-                              final cellValue = key == 'Fecha de Registro'
-                                  ? '${usuario[key]}'.substring(0, 19)
-                                  : '${usuario[key]}';
-
-                              if (editingUsuario != null && editingUsuario!['C.I.'] == usuarioId) {
-                                return DataCell(
-                                  TextField(
-                                    onChanged: (value) {
-                                      setState(() {
-                                        editingUsuario![key] = value;
-                                      });
-                                    },
-                                    controller: TextEditingController(text: editingUsuario![key]),
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                );
-                              }
-
-                              return DataCell(
-                                Text(
-                                  cellValue,
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              );
-                            },
-                          ),
-                          DataCell(
-                            Row(
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.edit),
-                                  color: Colors.lightBlueAccent,
-                                  onPressed: () {
-                                    Editores editores = Editores();
-                                    editores.Editar(context, nombre_de_tabla, editarUsuario, usuario['C.I.']);
-                                  },
-                                ),
-                              ],
+                      child: DataTable(
+                        columns: titulosColumnas.keys.map(
+                              (String clave) => DataColumn(
+                            label: Text(
+                              titulosColumnas[clave]!,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                        ],
-                      );
-                    },
-                  ).toList(),
-                )
-                    : Container(),
+                        ).toList()
+                          ..add(
+                            DataColumn(
+                              label: Text(
+                                'Editar',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        rows: obtenerUsuariosFiltrados().map((usuario) {
+                          return DataRow(
+                            color: MaterialStateProperty.all(Colors.grey[350]!),
+                            cells: titulosColumnas.keys.map((String clave) {
+                              return DataCell(
+                                Text(
+                                  usuario[clave].toString(),
+                                  style: TextStyle(color: Colors.black),
+                                ),
+                              );
+                            }).toList()
+                              ..add(
+                                DataCell(
+                                  IconButton(
+                                    icon: Icon(Icons.edit),
+                                    color: Color.fromRGBO(255, 184, 0, 1.0),
+                                    onPressed: () {
+                                      Editores editores = Editores();
+                                      editores.Editar(context, nombre_de_tabla, editarUsuario, usuario['C.I.']);
+                                    },
+                                  ),
+                                ),
+                              ),
+                          );
+                        }).toList(),
+                        dividerThickness: 1.0,
+                        horizontalMargin: 10.0,
+                        columnSpacing: 10.0,
+                        dataRowHeight: 45.0,
+                        headingRowColor: MaterialStateProperty.resolveWith<Color>(
+                              (Set<MaterialState> estados) {
+                            return Color.fromRGBO(53, 122, 178, 1);  // Color para el encabezado
+                          },
+                        ),
+                      ),
+                    )
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

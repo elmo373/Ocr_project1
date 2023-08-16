@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:postgre_flutter/para_windows/roles/editar.dart';
 import 'package:postgre_flutter/para_windows/base_de_datos_control.dart';
 
 class lista_usuarios extends StatefulWidget {
@@ -7,43 +6,66 @@ class lista_usuarios extends StatefulWidget {
   _lista_usuariosState createState() => _lista_usuariosState();
 }
 
-class _lista_usuariosState extends State<lista_usuarios>{
+class _lista_usuariosState extends State<lista_usuarios> {
   List<Map<String, dynamic>> usuarios = [];
-  String searchQuery = '';
-  String nombre_de_tabla = 'usuarios';
-  Map<String, dynamic>? editingUsuario;
+  String consultaBusqueda = '';
+  String nombreTabla = 'usuarios';
+  Map<String, dynamic>? usuarioEditando;
+  ScrollController controlScroll = ScrollController();
+
+  final Map<String, String> titulosColumnas = {
+    'C.I.': 'C.I.',
+    'Nombre': 'Nombre',
+    'Contraseña': 'Contraseña',
+    'Correo Electrónico': 'Correo Electrónico',
+    'Rol': 'Rol',
+    'Fecha de Registro': 'Fecha de Registro',
+    'Numero de Telefono': 'Número de Teléfono'
+  };
 
   @override
   void initState() {
     super.initState();
-    obtenerUsuarios();
+    cargarUsuarios();
   }
 
-  void obtenerUsuarios() async {
-    usuarios = await base_de_datos_control.obtenerDatos(nombre_de_tabla);
+  void cargarUsuarios() async {
+    usuarios = await base_de_datos_control.obtenerDatos(nombreTabla);
     setState(() {});
   }
 
-  List<Map<String, dynamic>> getFilteredUsuarios() {
-    if (searchQuery.isEmpty) {
+  List<Map<String, dynamic>> obtenerUsuariosFiltrados() {
+    if (consultaBusqueda.isEmpty) {
       return usuarios;
     } else {
       return usuarios.where((usuario) {
-        return usuario.values.any((value) => value.toString().toLowerCase().contains(searchQuery.toLowerCase()));
+        return usuario.values.any(
+                (value) => value.toString().toLowerCase().contains(consultaBusqueda.toLowerCase()));
       }).toList();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final filteredUsuarios = getFilteredUsuarios();
+    final usuariosFiltrados = obtenerUsuariosFiltrados();
 
     return Scaffold(
       body: Container(
         color: Color.fromRGBO(3, 72, 128, 1),
+        width: MediaQuery.of(context).size.width,
         child: Column(
           children: [
+            Text(
+              'Lista de usuarios',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 4),
             Container(
+              width: MediaQuery.of(context).size.width * 0.4,
               color: Color.fromRGBO(3, 72, 128, 1),
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
@@ -51,21 +73,19 @@ class _lista_usuariosState extends State<lista_usuarios>{
                   IconButton(
                     icon: Icon(Icons.search),
                     color: Colors.white,
-                    onPressed: () {
-                      // Aquí puedes implementar la lógica adicional que desees al hacer clic en la lupa
-                    },
+                    onPressed: () {},
                   ),
                   Text(
                     'Buscar:',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 22,
                     ),
                   ),
                   SizedBox(width: 8),
                   Expanded(
                     child: TextField(
-                      onChanged: (value) => setState(() => searchQuery = value),
+                      onChanged: (valor) => setState(() => consultaBusqueda = valor),
                       style: TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         enabledBorder: UnderlineInputBorder(
@@ -80,59 +100,81 @@ class _lista_usuariosState extends State<lista_usuarios>{
                 ],
               ),
             ),
+
             Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: filteredUsuarios.isNotEmpty
-                    ? DataTable(
-                  columns: filteredUsuarios.first.keys.map(
-                        (String key) => DataColumn(
-                      label: Text(
-                        key,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
+              child: Scrollbar(
+                isAlwaysShown: true,
+                controller: controlScroll,
+                child: SingleChildScrollView(
+                  controller: controlScroll,
+                  scrollDirection: Axis.horizontal,
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minWidth: 1000),
+                          child: usuariosFiltrados.isNotEmpty
+                              ? Theme(
+                            data: Theme.of(context).copyWith(
+                              dividerColor: Color.fromRGBO(53, 122, 178, 1),
+                              canvasColor: Color.fromRGBO(53, 122, 178, 1),
+                            ),
+                            child: DataTable(
+                              columns: titulosColumnas.keys.map(
+                                    (String key) => DataColumn(
+                                  label: Text(
+                                    titulosColumnas[key]!,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ).toList(),
+                              rows: usuariosFiltrados.map(
+                                    (Map<String, dynamic> usuario) {
+                                  return DataRow(
+                                    color: MaterialStateProperty.resolveWith<Color>(
+                                          (Set<MaterialState> estados) {
+                                        return Colors.grey[350]!;  // Color para las filas de datos
+                                      },
+                                    ),
+                                    cells: usuario.keys.map(
+                                          (String clave) {
+                                        final valorCelda = '${usuario[clave]}';
+                                        return DataCell(
+                                          Text(
+                                            valorCelda,
+                                            style: TextStyle(color: Colors.black),
+                                          ),
+                                          showEditIcon: false,
+                                        );
+                                      },
+                                    ).toList(),
+                                  );
+                                },
+                              ).toList(),
+                              dividerThickness: 1.0,
+                              horizontalMargin: 10.0,
+                              columnSpacing: 10.0,
+                              dataRowHeight: 45.0,
+                              headingRowColor: MaterialStateProperty.resolveWith<Color>(
+                                    (Set<MaterialState> states) {
+                                  return Color.fromRGBO(53, 122, 178, 1); // Color para el encabezado
+                                },
+                              ),
+                            ),
+                          )
+                              : Container(),
                         ),
                       ),
                     ),
-                  ).toList(),
-                  rows: filteredUsuarios.map(
-                        (Map<String, dynamic> usuario) {
-                          final usuarioId = usuario['C.I.'];
-                      return DataRow(
-                        cells: usuario.keys.map(
-                              (String key) {
-                            final cellValue = key == 'Fecha de Registro'
-                                ? '${usuario[key]}'.substring(0, 19)
-                                : '${usuario[key]}';
-
-                            if (editingUsuario != null && editingUsuario!['C.I.'] == usuarioId) {
-                              return DataCell(
-                                TextField(
-                                  onChanged: (value) {
-                                    setState(() {
-                                      editingUsuario![key] = value;
-                                    });
-                                  },
-                                  controller: TextEditingController(text: editingUsuario![key]),
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              );
-                            }
-
-                            return DataCell(
-                              Text(
-                                cellValue,
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            );
-                          },
-                        ).toList(),
-                      );
-                    },
-                  ).toList(),
-                )
-                    : Container(),
+                  ),
+                ),
               ),
             ),
           ],

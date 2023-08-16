@@ -31,12 +31,11 @@ class base_de_datos_control {
 
   static Future<void> editarDatos(String nombre_de_tabla, String ci, List<Map<String, dynamic>> dato) async {
     final connection = _getConnection();
-    print(dato);
 
     try {
       await connection.open();
       ci = AESCrypt.encriptar(ci);
-      final fecha =DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+      final fecha = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
       final ciEncriptado = AESCrypt.encriptar(dato[0]['C.I.']);
       final nombreEncriptado = AESCrypt.encriptar(dato[0]['Nombre']);
       final contrasennaEncriptada = AESCrypt.encriptar(dato[0]['Contraseña']);
@@ -53,6 +52,9 @@ class base_de_datos_control {
           "numero_de_telefono = '$telefonoEncriptado',"
           "fecha_de_registro = '$fechaEncriptada' WHERE id_ci = '$ci'");
 
+      // Aquí actualizamos el id_ci en la tabla estado
+      await connection.query("UPDATE estado SET id_ci = '$ciEncriptado' WHERE id_ci = '$ci'");
+
       print('Usuario editado exitosamente');
     } catch (e) {
       print('Error al editar el usuario: $e');
@@ -64,6 +66,7 @@ class base_de_datos_control {
 
   static Future<void> agregarDatos(String nombre_de_tabla, List<Map<String, dynamic>> datos) async {
     final connection = _getConnection();
+    print(datos);
 
     try {
       await connection.open();
@@ -72,7 +75,7 @@ class base_de_datos_control {
       final nombreEncriptado = AESCrypt.encriptar(datos[0]['Nombre']);
       final contrasennaEncriptada = AESCrypt.encriptar(datos[0]['Contraseña']);
       final correoEncriptado = AESCrypt.encriptar(datos[0]['Correo Electrónico']);
-      final rolEncriptado = AESCrypt.encriptar(detras_de_rol(datos[1]['Rol']));
+      final rolEncriptado = AESCrypt.encriptar(detras_de_rol(datos[0]['Rol']));
       final telefonoEncriptado = AESCrypt.encriptar(datos[0]['Numero de Telefono']);
       final fechaEncriptada = AESCrypt.encriptar(fecha);
 
@@ -87,8 +90,6 @@ class base_de_datos_control {
     } finally {
       await connection.close();
     }
-
-    obtenerDatos(nombre_de_tabla);
   }
 
   static Future<List<Map<String, dynamic>>> obtenerDatos(String nombre_de_tabla) async {
@@ -150,7 +151,7 @@ class base_de_datos_control {
       case 'tecnico':
         return 'Técnico';
       case 'interesado_en_el_registro':
-        return 'En Trámite para el Registro';
+        return 'Empresa';
       default:
         return '';
     }
@@ -163,7 +164,7 @@ class base_de_datos_control {
         return 'personal_regular';
       case 'Técnico':
         return 'tecnico';
-      case 'En Trámite para el Registro':
+      case 'Empresa':
         return 'interesado_en_el_registro';
       default:
         return '';
@@ -178,13 +179,37 @@ class base_de_datos_control {
       await connection.open();
       final results = await connection.query("SELECT * FROM estado WHERE id_ci = '$ci'");
       if (results.isNotEmpty) {
-        print(results.first[1]);
         return results.first[1] as String;
       }else{return '';}
       // Si no se encontró ningún registro, se puede asumir que el usuario está activo por defecto.
     } catch (e) {
       print('Error al obtener el estado del usuario: $e');
       return 'No se pudo obtener el estado';
+    } finally {
+      await connection.close();
+    }
+
+  }
+
+  static Future<List<Map<String, dynamic>>> obtenerEstadolista() async {
+
+    final connection = _getConnection();
+
+    try {
+      await connection.open();
+      final results = await connection.query("SELECT * FROM estado ");
+      if (results.isNotEmpty) {
+        return results.map<Map<String, dynamic>>((row) {
+          return {
+            'C.I.': AESCrypt.desencriptar(row[0]),
+            'Estado': row[1],
+          };
+        }).toList();
+      }else{return [];}
+      // Si no se encontró ningún registro, se puede asumir que el usuario está activo por defecto.
+    } catch (e) {
+      print('Error al obtener el estado del usuario: $e');
+      return [];
     } finally {
       await connection.close();
     }
@@ -209,6 +234,111 @@ class base_de_datos_control {
       }
     } catch (e) {
       print('Error al cambiar el estado del usuario: $e');
+    } finally {
+      await connection.close();
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> obtenerDatosregistro() async {
+    final connection = _getConnection();
+
+    try {
+      await connection.open();
+      final results = await connection.query("SELECT * FROM documento_de_registro");
+      return results.map<Map<String, dynamic>>((row) {
+        return {
+          'Documento': AESCrypt.desencriptar(row[0]),
+          'Usuario': AESCrypt.desencriptar(row[1]),
+          'Nombre Empresa': AESCrypt.desencriptar(row[2]),
+          'Fecha Emisión': AESCrypt.desencriptar(row[3]),
+          'Director Material Bélico': AESCrypt.desencriptar(row[4]),
+          'Director General de Logística': AESCrypt.desencriptar(row[5]),
+          'RUC': AESCrypt.desencriptar(row[6]),
+          'Representante Legal': AESCrypt.desencriptar(row[7]),
+          'Actividad Principal': AESCrypt.desencriptar(row[8]),
+          'Nombre Propietario': AESCrypt.desencriptar(row[9]),
+          'PDF': AESCrypt.desencriptar(row[10]),
+        };
+      }).toList();
+    } catch (e) {
+      print('Error en la conexión a PostgreSQL: $e');
+      return [];
+    } finally {
+      await connection.close();
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> obtenerDatosinspeccion() async {
+    final connection = _getConnection();
+
+    try {
+      await connection.open();
+      final results = await connection.query("SELECT * FROM documento_de_inspeccion");
+      return results.map<Map<String, dynamic>>((row) {
+        return {
+          'Documento': AESCrypt.desencriptar(row[0]),
+          'Registro': AESCrypt.desencriptar(row[1]),
+          'Usuario': AESCrypt.desencriptar(row[2]),
+          'Nombre Empresa': AESCrypt.desencriptar(row[3]),
+          'Nombre Propietario': AESCrypt.desencriptar(row[4]),
+          'Representante Legal': AESCrypt.desencriptar(row[5]),
+          'Cumple': AESCrypt.desencriptar(row[6]),
+          'Ubicación Depósito': AESCrypt.desencriptar(row[7]),
+          'Fecha Emisión': AESCrypt.desencriptar(row[8]),
+          'PDF': AESCrypt.desencriptar(row[9]),
+        };
+      }).toList();
+    } catch (e) {
+      print('Error en la conexión a PostgreSQL: $e');
+      return [];
+    } finally {
+      await connection.close();
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> obtenerEstadoDeDocumentoDeInspeccion() async {
+    final connection = _getConnection();
+
+    try {
+      await connection.open();
+      final results = await connection.query("SELECT * FROM estado_de_documento_de_inspeccion");
+      if (results.isNotEmpty) {
+        return results.map<Map<String, dynamic>>((row) {
+          return {
+            'id_doc': AESCrypt.desencriptar(row[0]),  // Asumiendo que id_doc también está encriptado
+            'Estado': row[1],
+          };
+        }).toList();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      print('Error al obtener el estado del documento de inspección: $e');
+      return [];
+    } finally {
+      await connection.close();
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> obtenerEstadoDeRegistro() async {
+    final connection = _getConnection();
+
+    try {
+      await connection.open();
+      final results = await connection.query("SELECT * FROM estado_de_registro");
+      if (results.isNotEmpty) {
+        return results.map<Map<String, dynamic>>((row) {
+          return {
+            'id_doc': AESCrypt.desencriptar(row[0]),  // Asumiendo que id_doc también está encriptado
+            'Estado': row[1],
+          };
+        }).toList();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      print('Error al obtener el estado del registro: $e');
+      return [];
     } finally {
       await connection.close();
     }

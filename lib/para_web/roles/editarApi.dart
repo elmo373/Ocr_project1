@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:postgre_flutter/Encriptacion.dart';
 import 'package:postgre_flutter/para_web/api_control.dart';
+import 'package:postgre_flutter/para_web/roles/validacion_datos.dart';
 
 class EditoresApi {
   List<Map<String, dynamic>> dato = [];
@@ -22,7 +23,7 @@ class EditoresApi {
             TextButton(
               child: Text('Eliminar'),
               onPressed: () {
-                eliminar(ci); // Llamar a la función proporcionada como parámetro con el argumento adecuado
+                eliminar(ci);
                 Navigator.of(dialogContext).pop();
               },
             ),
@@ -44,12 +45,13 @@ class EditoresApi {
 
     String Rol_a_cambiar = "Cambiar " + usuarios[0]['Rol'].toString() + " por:";
 
-    TextEditingController textController = TextEditingController(); // Controlador de texto
+    TextEditingController textController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        String botonElegido = ""; // Variable para almacenar el botón seleccionado
+        String botonElegido = "";
+        String errorMensaje = "";
 
         return StatefulBuilder(
           builder: (context, setState) {
@@ -61,16 +63,15 @@ class EditoresApi {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: usuario.keys.map((key) {
                       if (key == 'Fecha de Registro') {
-                        return SizedBox.shrink(); // No mostrar la fecha de registro
+                        return SizedBox.shrink();
                       } else if (key == 'Rol') {
-                        if (usuario[key] == 'En Trámite para el Registro') {
-                          return SizedBox.shrink(); // Ocultar la columna "Rol" si el rol es "En Trámite para el Registro"
+                        if (usuario[key] == 'Empresa') {
+                          return SizedBox.shrink();
                         } else {
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(key),
-                              // Mostrar el nombre de la columna
                               Text(Rol_a_cambiar),
                               for (String buttonText in ["Administrador", "Personal", "Técnico"])
                                 Container(
@@ -84,8 +85,6 @@ class EditoresApi {
                                       setState(() {
                                         botonElegido = buttonText;
                                       });
-                                      // Acción a realizar cuando se presione el botón
-                                      // Puedes agregar aquí la lógica para editar el rol
                                     },
                                     child: Container(
                                       padding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -104,12 +103,11 @@ class EditoresApi {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(key),
-                            // Cuadro de texto editable
                             TextField(
                               readOnly: false,
-                              controller: TextEditingController(text: usuario[key].toString()), // Utilizar el mismo controlador para todos los campos de texto
+                              controller: TextEditingController(text: usuario[key].toString()),
                               onChanged: (value) {
-                                usuario[key] = value; // Actualizar el valor en la lista nuevosUsuarios al escribir en el campo de texto
+                                usuario[key] = value;
                               },
                             ),
                           ],
@@ -117,28 +115,38 @@ class EditoresApi {
                       }
                     }).toList(),
                   );
-                }).toList(),
+                }).toList()..add(
+                    Column(
+                      children: [
+                        errorMensaje != "" ? Text(errorMensaje, style: TextStyle(color: Colors.red)) : SizedBox.shrink()
+                      ],
+                    )
+                ),
               ),
               actions: [
                 TextButton(
                   child: Text('Sí'),
                   onPressed: () {
-                    // Cambiar el valor del campo "rol" en nuevosUsuarios según el botón seleccionado
                     if(botonElegido != ''){
                       for (var usuario in nuevosUsuarios) {
                         usuario['Rol'] = botonElegido;
                       }
                     }
-
-                    editar(ci, nuevosUsuarios); // Guardar los cambios en la base de datos
-                    Navigator.of(context).pop(); // Cerrar la ventana de alerta
+                    var errores = validarUsuarios(nuevosUsuarios);
+                    if (errores?.isEmpty ?? true) {
+                      editar(ci, nuevosUsuarios);
+                      Navigator.of(context).pop();
+                    } else {
+                      setState(() {
+                        errorMensaje = errores?.join(", ") ?? "";
+                      });
+                    }
                   },
                 ),
-
                 TextButton(
                   child: Text('No'),
                   onPressed: () {
-                    Navigator.of(context).pop(); // Cerrar la ventana de alerta
+                    Navigator.of(context).pop();
                   },
                 ),
               ],
@@ -166,7 +174,7 @@ class EditoresApi {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        String botonElegido = ""; // Variable para almacenar el botón seleccionado
+        String botonElegido = "";
 
         return StatefulBuilder(
           builder: (context, setState) {
@@ -178,13 +186,12 @@ class EditoresApi {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: usuario.keys.map((key) {
                       if (key == 'Fecha de Registro') {
-                        return SizedBox.shrink(); // No mostrar la fecha de registro
+                        return SizedBox.shrink();
                       } else if (key == 'Rol') {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(key),
-                            // Mostrar el nombre de la columna
                             Text(Rol_a_cambiar),
                             for (String buttonText in ["Administrador", "Personal", "Técnico","En Trámite para el Registro"])
                               Container(
@@ -198,8 +205,6 @@ class EditoresApi {
                                     setState(() {
                                       botonElegido = buttonText;
                                     });
-                                    // Acción a realizar cuando se presione el botón
-                                    // Puedes agregar aquí la lógica para agregar el rol
                                   },
                                   child: Container(
                                     padding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -217,12 +222,11 @@ class EditoresApi {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(key),
-                            // Cuadro de texto editable
                             TextField(
                               readOnly: false,
-                              controller: TextEditingController(text: usuario[key].toString()), // Utilizar el mismo controlador para todos los campos de texto
+                              controller: TextEditingController(text: usuario[key].toString()),
                               onChanged: (value) {
-                                usuario[key] = value; // Actualizar el valor en la lista nuevosUsuarios al escribir en el campo de texto
+                                usuario[key] = value;
                               },
                             ),
                           ],
@@ -236,24 +240,18 @@ class EditoresApi {
                 TextButton(
                   child: Text('Agregar'),
                   onPressed: () {
-                    // Crear un nuevo usuario con los valores seleccionados
-                    Map<String, dynamic> nuevoUsuario = {
-                      'Rol': botonElegido,
-                    };
-                    print(nuevoUsuario);
+                    if (botonElegido != "") {
+                      nuevosUsuarios[0]['Rol'] = botonElegido;
+                    }
 
-                    nuevosUsuarios.add(nuevoUsuario);
-                    print(nuevosUsuarios);
-
-                    agregar("x", nuevosUsuarios); // Agregar el usuario a la base de datos
-                    Navigator.of(context).pop(); // Cerrar la ventana de alerta
+                    agregar("x", nuevosUsuarios);
+                    Navigator.of(context).pop();
                   },
                 ),
-
                 TextButton(
                   child: Text('Cancelar'),
                   onPressed: () {
-                    Navigator.of(context).pop(); // Cerrar la ventana de alerta
+                    Navigator.of(context).pop();
                   },
                 ),
               ],
