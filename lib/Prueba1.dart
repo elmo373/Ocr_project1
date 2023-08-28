@@ -1,46 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:postgres/postgres.dart';
 import 'package:postgre_flutter/Encriptacion.dart';
-import 'package:pie_chart/pie_chart.dart';
-
 void main() {
-  runApp(DepositosPorDepartamentoApp());
+  runApp(WindowsGestion());
 }
 
-class DepositosPorDepartamentoApp extends StatelessWidget {
+class WindowsGestion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: DepositosPorDepartamentoPage(),
+      home: WindowsHomePage(),
     );
   }
 }
 
-class DepositosPorDepartamentoPage extends StatefulWidget {
+class WindowsHomePage extends StatefulWidget {
   @override
-  _DepositosPorDepartamentoPageState createState() => _DepositosPorDepartamentoPageState();
+  _WindowsHomePageState createState() => _WindowsHomePageState();
 }
 
-class _DepositosPorDepartamentoPageState extends State<DepositosPorDepartamentoPage> {
-  Map<String, int> depositosPorDepartamento = {
-    'La Paz': 0,
-    'Oruro': 0,
-    'Potosí': 0,
-    'Cochabamba': 0,
-    'Chuquisaca': 0,
-    'Tarija': 0,
-    'Santa Cruz': 0,
-    'Beni': 0,
-    'Pando': 0,
-  };
+class _WindowsHomePageState extends State<WindowsHomePage> {
 
   @override
   void initState() {
     super.initState();
-    consultarDepositosPorDepartamento();
+    fillTable();
   }
 
-  void consultarDepositosPorDepartamento() async {
+  void fillTable() async {
     final connection = PostgreSQLConnection(
       '35.225.248.224',
       5432,
@@ -52,17 +39,29 @@ class _DepositosPorDepartamentoPageState extends State<DepositosPorDepartamentoP
     try {
       await connection.open();
 
-      final result = await connection.query('SELECT ubicacion_deposito FROM documento_de_inspeccion');
+      List<Map<String, dynamic>> datosRegistro = [
+        {
+          'id_doc': AESCrypt.encriptar('68400051029374658'),
+          'id_registro': AESCrypt.encriptar('6840005'),
+          'id_usuario': AESCrypt.encriptar('1029374658'),
+          'nombre_empresa': AESCrypt.encriptar('Explosivos para Minas Seguras S.A.'),
+          'nombre_propietario': AESCrypt.encriptar('Fabio Raul Suarez Guzmán'),
+          'representante_legal': AESCrypt.encriptar('Fabio Raul Suarez Guzmán'),
+          'cumple': AESCrypt.encriptar('No'),
+          'ubicacion_deposito': AESCrypt.encriptar('Oruro,Pantaleón Dalence,Huanuni'),
+          'fecha_de_emision': AESCrypt.encriptar('2023-06-11'),
+          'pdf': AESCrypt.encriptar('https://firebasestorage.googleapis.com/v0/b/appprueba-16698.appspot.com/o/2023-08-04%2010%3A16%3A24.pdf?alt=media&token=6ba70a28-14af-4200-8085-87536ac22cc4'),
+        },
 
-      for (var row in result) {
-        final ubicacionEncriptada = row[0].toString();
-        final ubicacionDesencriptada = AESCrypt.desencriptar(ubicacionEncriptada);
-        final departamento = ubicacionDesencriptada.split(',')[0].trim();
+      ];
 
-        depositosPorDepartamento[departamento] = (depositosPorDepartamento[departamento] ?? 0) + 1;
+      for (var dato in datosRegistro) {
+        await connection.query(
+          "INSERT INTO documento_de_inspeccion (id_doc, id_registro, id_usuario, nombre_empresa, nombre_propietario, representante_legal, cumple, ubicacion_deposito, fecha_de_emision, pdf) VALUES ('${dato['id_doc']}', '${dato['id_registro']}', '${dato['id_usuario']}', '${dato['nombre_empresa']}', '${dato['nombre_propietario']}', '${dato['representante_legal']}', '${dato['cumple']}', '${dato['ubicacion_deposito']}', '${dato['fecha_de_emision']}', '${dato['pdf']}')",
+        );
       }
 
-      print('Datos consultados correctamente');
+      print('Datos insertados correctamente');
     } catch (e) {
       print('Error en la conexión a PostgreSQL: $e');
     } finally {
@@ -74,39 +73,24 @@ class _DepositosPorDepartamentoPageState extends State<DepositosPorDepartamentoP
 
   @override
   Widget build(BuildContext context) {
-    // Calculamos los datos para el gráfico
-    final Map<String, double> dataMap = {};
-    depositosPorDepartamento.forEach((key, value) {
-      dataMap[key] = value.toDouble();
-    });
-
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.lightBlueAccent[700],
-        title: Text('Depósitos por Departamento'),
+        backgroundColor: Colors.lightGreenAccent[700], // Fondo verde
+        title: Text(
+          'Flutter y PostgreSQL, Windows',
+          style: TextStyle(color: Colors.indigo[900]), // Letras blancas
+        ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: PieChart(
-              dataMap: dataMap,
-              chartType: ChartType.ring,
-            ),
+      body: Container(
+        color: Colors.indigo[900],
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Datos insertados correctamente', style: TextStyle(color: Colors.white)),
+            ],
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: depositosPorDepartamento.keys.length,
-              itemBuilder: (context, index) {
-                final departamento = depositosPorDepartamento.keys.elementAt(index);
-                final depositos = depositosPorDepartamento[departamento];
-                return ListTile(
-                  title: Text(departamento),
-                  subtitle: Text('Depósitos: $depositos'),
-                );
-              },
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

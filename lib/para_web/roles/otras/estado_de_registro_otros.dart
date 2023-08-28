@@ -83,12 +83,20 @@ class _EstadoEmpresaPageState extends State<EstadoEmpresaPage> {
     return DataTable(
       columns: titulosColumnas.keys.map(
             (String key) => DataColumn(
-          label: Text(
-            titulosColumnas[key]!,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          label: Container(
+            padding: const EdgeInsets.all(8.0),
+            decoration: BoxDecoration(
+              border: Border.symmetric(
+                vertical: BorderSide(color: Colors.black),  // Línea vertical de la columna
+              ),
+            ),
+            child: Text(
+              titulosColumnas[key]!,
+              style: TextStyle(
+                color: Colors.white,  // Color del título de las columnas
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
@@ -97,16 +105,24 @@ class _EstadoEmpresaPageState extends State<EstadoEmpresaPage> {
         return DataRow(
           color: MaterialStateProperty.resolveWith<Color>(
                 (Set<MaterialState> estados) {
-              return Colors.grey[350]!;
+              return Colors.grey[350]!;  // Color de fondo de las celdas de las filas
             },
           ),
           cells: usuario.keys.map(
                 (String clave) {
               final valorCelda = '${usuario[clave]}';
               return DataCell(
-                Text(
-                  valorCelda,
-                  style: TextStyle(color: Colors.black),
+                Container(
+                  padding: const EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    border: Border.symmetric(
+                      vertical: BorderSide(color: Colors.black),  // Línea vertical de cada celda
+                    ),
+                  ),
+                  child: Text(
+                    valorCelda,
+                    style: TextStyle(color: Colors.black),  // Color del texto dentro de las celdas
+                  ),
                 ),
                 showEditIcon: false,
               );
@@ -114,13 +130,13 @@ class _EstadoEmpresaPageState extends State<EstadoEmpresaPage> {
           ).toList(),
         );
       }).toList(),
-      dividerThickness: 1.0,
-      horizontalMargin: 10.0,
-      columnSpacing: 10.0,
-      dataRowHeight: 45.0,
+      dividerThickness: 1.0,  // Grosor de las divisiones horizontales
+      horizontalMargin: 10.0,  // Margen horizontal
+      columnSpacing: 10.0,  // Espaciamiento entre columnas
+      dataRowHeight: 45.0,  // Altura de las filas
       headingRowColor: MaterialStateProperty.resolveWith<Color>(
             (Set<MaterialState> states) {
-          return Color.fromRGBO(53, 122, 178, 1);
+          return Color.fromRGBO(53, 122, 178, 1);  // Color de fondo de la fila del encabezado
         },
       ),
     );
@@ -146,7 +162,7 @@ class _EstadoEmpresaPageState extends State<EstadoEmpresaPage> {
             SizedBox(height: 4),
             Expanded(
               child: Theme(
-                data: Theme.of(context).copyWith(dividerColor: Colors.white),
+                data: Theme.of(context).copyWith(dividerColor: Colors.black),  // Cambiando el color del divisor a negro para mostrar las líneas horizontales.
                 child: SingleChildScrollView(
                   child: buildDataTable(),
                 ),

@@ -49,6 +49,16 @@ class _lista_usuariosState extends State<lista_usuarios> {
   Widget build(BuildContext context) {
     final usuariosFiltrados = obtenerUsuariosFiltrados();
 
+    final Map<String, double> columnWidths = {
+      'C.I.': 100.0,
+      'Nombre': 300.0,
+      'Contraseña': 180.0,
+      'Correo Electrónico': 320.0,
+      'Rol': 130.0,
+      'Fecha de Registro': 180.0,
+      'Numero de Telefono': 200.0
+    };
+
     return Scaffold(
       body: Container(
         color: Color.fromRGBO(3, 72, 128, 1),
@@ -64,6 +74,7 @@ class _lista_usuariosState extends State<lista_usuarios> {
               ),
             ),
             SizedBox(height: 4),
+
             Container(
               width: MediaQuery.of(context).size.width * 0.4,
               color: Color.fromRGBO(3, 72, 128, 1),
@@ -119,21 +130,36 @@ class _lista_usuariosState extends State<lista_usuarios> {
                           child: usuariosFiltrados.isNotEmpty
                               ? Theme(
                             data: Theme.of(context).copyWith(
-                              dividerColor: Color.fromRGBO(53, 122, 178, 1),
+                              dividerColor: Colors.black, // Color de las líneas divisorias cambiado a negro
                               canvasColor: Color.fromRGBO(53, 122, 178, 1),
                             ),
                             child: DataTable(
                               columns: titulosColumnas.keys.map(
-                                    (String key) => DataColumn(
-                                  label: Text(
-                                    titulosColumnas[key]!,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
+                                    (String key) {
+                                  final width = columnWidths[key];
+                                  return DataColumn(
+                                    label: Container(
+                                      width: width,
+                                      alignment: Alignment.centerLeft,
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          right: BorderSide(color: Colors.black, width: 1.0),
+                                        ),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          titulosColumnas[key]!,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
+                                  );
+                                },
                               ).toList(),
                               rows: usuariosFiltrados.map(
                                     (Map<String, dynamic> usuario) {
@@ -147,9 +173,21 @@ class _lista_usuariosState extends State<lista_usuarios> {
                                           (String clave) {
                                         final valorCelda = '${usuario[clave]}';
                                         return DataCell(
-                                          Text(
-                                            valorCelda,
-                                            style: TextStyle(color: Colors.black),
+                                          Container(
+                                            width: columnWidths[clave],
+                                            alignment: Alignment.centerLeft,
+                                            decoration: BoxDecoration(
+                                              border: Border(
+                                                right: BorderSide(color: Colors.black, width: 1.0),
+                                              ),
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Text(
+                                                valorCelda,
+                                                style: TextStyle(color: Colors.black),
+                                              ),
+                                            ),
                                           ),
                                           showEditIcon: false,
                                         );

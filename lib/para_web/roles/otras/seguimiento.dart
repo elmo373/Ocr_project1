@@ -32,31 +32,6 @@ class _seguimientoState extends State<seguimiento> {
     setState(() {});
   }
 
-  Future<List<Map<String, dynamic>>> obtenerDatosConsolidados() async {
-    List<Map<String, dynamic>> inspecciones = await api_control.obtenerDatosinspeccion();
-    List<Map<String, dynamic>> registros = await api_control.obtenerDatosregistro();
-    List<Map<String, dynamic>> usuarios = await api_control.obtenerDatos('usuarios');
-
-    List<Map<String, dynamic>> consolidado = [];
-    for (var inspeccion in inspecciones) {
-      var empresa = inspeccion['Nombre Empresa'];
-      var registro = registros.firstWhere((r) => r['Nombre Empresa'] == empresa, orElse: () => {});
-      var usuario = usuarios.firstWhere((u) => u['Nombre'] == empresa, orElse: () => {});
-
-      consolidado.add({
-        'Nombre Empresa': empresa,
-        'Fecha Emisión Inspección': inspeccion['Fecha Emisión'] ?? 'N/A',
-        'PDF Inspección': inspeccion['PDF'],
-        'Fecha Emisión Registro': registro['Fecha Emisión'] ?? 'N/A',
-        'PDF Registro': registro['PDF'],
-        'Fecha Registro Usuario': usuario['Fecha de Registro'] ?? 'N/A',
-        'Línea de Tiempo': 'Ver Línea de Tiempo',  // Aquí se ha añadido la línea de tiempo
-      });
-    }
-
-    return consolidado;
-  }
-
   void abrirEnlace(String url) async {
     if (await canLaunch(url)) {
       await launch(url);
@@ -64,6 +39,61 @@ class _seguimientoState extends State<seguimiento> {
       throw 'No se pudo abrir $url';
     }
   }
+
+  Future<List<Map<String, dynamic>>> obtenerDatosConsolidados() async {
+    List<Map<String, dynamic>> inspecciones = await api_control.obtenerDatosinspeccion();
+    List<Map<String, dynamic>> registros = await api_control.obtenerDatosregistro();
+    List<Map<String, dynamic>> usuarios = await api_control.obtenerDatos('usuarios');
+
+    Map<String, Map<String, dynamic>> consolidado = {};
+
+    for (var inspeccion in inspecciones) {
+      var empresa = inspeccion['Nombre Empresa'];
+
+      var registro = registros.firstWhere((r) => r['Nombre Empresa'] == empresa, orElse: () => {});
+      var usuario = usuarios.firstWhere((u) => u['Nombre'] == empresa, orElse: () => {});
+
+      var fechaInspeccion = DateTime.tryParse(inspeccion['Fecha Emisión'] ?? '');
+      var fechaExistente = consolidado[empresa] != null ? DateTime.tryParse(consolidado[empresa]?['Fecha Emisión Inspección'] ?? '') : null;
+
+      if (consolidado[empresa] == null || (fechaInspeccion != null && fechaExistente != null && fechaInspeccion.isAfter(fechaExistente))) {
+        var estadoInspeccion = 'Activo';
+        var estadoRegistro = 'Activo';
+
+        consolidado[empresa] = {
+          'Nombre Empresa': empresa,
+          'Fecha Emisión Inspección': inspeccion['Fecha Emisión'] ?? 'N/A',
+          'PDF Inspección': inspeccion['PDF'],
+          'Estado Inspección': estadoInspeccion,
+          'Cumple': inspeccion['Cumple'],
+          'Fecha Emisión Registro': registro['Fecha Emisión'] ?? 'N/A',
+          'PDF Registro': registro['PDF'],
+          'Estado Registro': estadoRegistro,
+          'Fecha Registro Usuario': usuario['Fecha de Registro'] ?? 'N/A',
+          'Línea de Tiempo': 'Ver Línea de Tiempo',
+        };
+      }
+    }
+
+    List<Map<String, dynamic>> sortedList = consolidado.values.toList()
+      ..sort((a, b) {
+        DateTime dateA = DateTime.parse(a['Fecha Emisión Inspección'] ?? '');
+        DateTime dateB = DateTime.parse(b['Fecha Emisión Inspección'] ?? '');
+
+        if (dateA != null && dateB != null) {
+          return dateA.compareTo(dateB);
+        } else if (dateA != null) {
+          return -1;
+        } else if (dateB != null) {
+          return 1;
+        }
+        return 0;
+      });
+
+    return sortedList;
+  }
+
+
 
   void mostrarGrafica(Map<String, dynamic> dato) {
     showDialog(
@@ -80,7 +110,10 @@ class _seguimientoState extends State<seguimiento> {
                   alignment: TimelineAlign.manual,
                   lineXY: 0.3,
                   isFirst: true,
-                  indicatorStyle: IndicatorStyle(width: 20),
+                  indicatorStyle: IndicatorStyle(
+                      width: 20,
+                      color: (dato['Estado Inspección'] == 'Activo' && dato['Cumple'] == 'Si') ? Colors.blue : Colors.red
+                  ),
                   endChild: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text('Fecha Emisión Inspección: ${dato['Fecha Emisión Inspección']}'),
@@ -89,7 +122,7 @@ class _seguimientoState extends State<seguimiento> {
                 TimelineTile(
                   alignment: TimelineAlign.manual,
                   lineXY: 0.3,
-                  indicatorStyle: IndicatorStyle(width: 20),
+                  indicatorStyle: IndicatorStyle(width: 20, color: dato['Estado Registro'] == 'Activo' ? Colors.blue : Colors.red),
                   endChild: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text('Fecha Emisión Registro: ${dato['Fecha Emisión Registro']}'),
@@ -99,7 +132,6 @@ class _seguimientoState extends State<seguimiento> {
                   alignment: TimelineAlign.manual,
                   lineXY: 0.3,
                   isLast: true,
-                  indicatorStyle: IndicatorStyle(width: 20),
                   endChild: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text('Fecha Registro Usuario: ${dato['Fecha Registro Usuario']}'),
@@ -121,8 +153,19 @@ class _seguimientoState extends State<seguimiento> {
     );
   }
 
+  List<Map<String, dynamic>> obtenerEmpresasFiltrados() {
+    if (consultaBusqueda.isEmpty) {
+      return datosConsolidados;
+    } else {
+      return datosConsolidados.where((hoja) {
+        return hoja.values.any((value) => value.toString().toLowerCase().contains(consultaBusqueda.toLowerCase()));
+      }).toList();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final empresasfiltradas = obtenerEmpresasFiltrados();
     return Scaffold(
       backgroundColor: Color.fromRGBO(3, 72, 128, 1),  // Cambio de color aquí
       body: Column(
@@ -168,7 +211,8 @@ class _seguimientoState extends State<seguimiento> {
               child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SingleChildScrollView(
-                child: Theme(
+                child: empresasfiltradas.isNotEmpty
+                ? Theme(
                   data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                   child: DataTable(
                     columns: titulosColumnas.keys.map(
@@ -183,7 +227,7 @@ class _seguimientoState extends State<seguimiento> {
                         ),
                       ),
                     ).toList(),
-                    rows: datosConsolidados.map(
+                    rows: empresasfiltradas.map(
                           (Map<String, dynamic> dato) {
                         return DataRow(
                           color: MaterialStateProperty.resolveWith<Color>(
@@ -233,7 +277,7 @@ class _seguimientoState extends State<seguimiento> {
                       },
                     ),
                   ),
-                ),
+                ) : Container(),
               ),
             ),
             ),
