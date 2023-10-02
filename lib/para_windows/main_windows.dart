@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:postgre_flutter/Encriptacion.dart';
@@ -90,6 +92,8 @@ class _PaginaPrincipalWindowsState extends State<PaginaPrincipalWindows> {
   @override
   Widget build(BuildContext context) {
     double ancho = MediaQuery.of(context).size.width;
+    double tamano_logo = 90;
+    double tamano_ciculo = tamano_logo * sqrt(2);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -110,23 +114,45 @@ class _PaginaPrincipalWindowsState extends State<PaginaPrincipalWindows> {
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-
-            // Cambios realizados aquí:
             children: [
+              Stack(
+                alignment: Alignment.center, // Asegura que la imagen esté centrada en el Stack
+                children: [
+                  Container(
+                    height: tamano_ciculo, // 2 * 85
+                    width: tamano_ciculo, // 2 * 85
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(
+                    width: tamano_logo,
+                    child: Image.asset(
+                      'lib/imagenes/Logo.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 8),
               Text(
                 'Sistema de Digitalización del Registro para el manejo de explosivos',
+                textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 35, color: Colors.white, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
               Text(
                 'SIDIO',
+                textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 60, color: Colors.white, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 15),
-
               Text(
                 'Ingrese sus credenciales',
-                style: TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold), // Original era 32, ahora es 30
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 30),
 

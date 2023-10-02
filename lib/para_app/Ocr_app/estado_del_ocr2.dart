@@ -45,9 +45,12 @@ class _PantallaResultado2State extends State<PantallaResultado2> {
   Widget build(BuildContext context) {
     var datosExtraidos = ExtractorDatosInspeccion.extraerDatos(widget.texto);
 
-    for (var llave in llaves) {
-      _controladores[llave]?.text = datosExtraidos[0][llave] ?? '';
+    if (datosExtraidos.isNotEmpty) {
+      for (var llave in llaves) {
+        _controladores[llave]?.text = datosExtraidos[0][llave] ?? '';
+      }
     }
+
 
     return Scaffold(
       appBar: AppBar(

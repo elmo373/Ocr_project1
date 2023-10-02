@@ -3,6 +3,7 @@ import 'package:postgre_flutter/Encriptacion.dart';
 import 'package:postgre_flutter/para_web/api_control.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:postgre_flutter/Base de datos/actualizacion_general.dart';
 
 final String Link = api_control.BASE_URL;  // Asegúrate de que este enlace esté correcto
 final String actualizarEstadoDeEmpresa = '$Link/query/EstadoDeEmpresas';
@@ -40,6 +41,7 @@ class _EstadoEmpresaPageState extends State<EstadoEmpresaPage> {
   }
 
   void actualizarEstadoDeEmpresas() async {
+    await actualizacion_general.cambios();
     try {
       final response = await http.get(Uri.parse(actualizarEstadoDeEmpresa));
 
@@ -76,51 +78,90 @@ class _EstadoEmpresaPageState extends State<EstadoEmpresaPage> {
     }
   }
 
-  DataTable buildDataTable() {
+  Widget generarTablaConstrained() {
     final usuariosFiltrados = obtenerUsuariosFiltrados();
 
-    return DataTable(
-      columns: titulosColumnas.keys.map(
-            (String key) => DataColumn(
-          label: Text(
-            titulosColumnas[key]!,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+    final Map<String, double> columnWidths = {
+      'id_empresa': 280.0,
+      'estado_de_la_empresa': 280.0,
+      'nombre': 280.0,
+      'razon': 1000.0,
+
+    };
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(minWidth: 1000),
+      child: DataTable(
+        columns: [
+          ...titulosColumnas.keys.map(
+                (String key) => DataColumn(
+              label: Container(
+                width: columnWidths[key],
+                alignment: Alignment.centerLeft,
+                decoration: BoxDecoration(
+                  border: Border(
+                    right: BorderSide(color: Colors.black, width: 1.0),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    titulosColumnas[key]!,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
+        ],
+        rows: usuariosFiltrados.map(
+              (Map<String, dynamic> usuario) {
+            return DataRow(
+              color: MaterialStateProperty.resolveWith<Color>(
+                    (Set<MaterialState> estados) {
+                  return Colors.grey[350]!;
+                },
+              ),
+              cells: usuario.keys.map(
+                    (String clave) {
+                  final valorCelda = '${usuario[clave]}';
+                  return DataCell(
+                    Container(
+                      width: columnWidths[clave],
+                      alignment: Alignment.centerLeft,
+                      decoration: BoxDecoration(
+                        border: Border(
+                          right: BorderSide(color: Colors.black, width: 1.0),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          valorCelda,
+                          style: TextStyle(color: Colors.black),
+                        ),
+                      ),
+                    ),
+                    showEditIcon: false,
+                  );
+                },
+              ).toList(),
+            );
+          },
+        ).toList(),
+        dividerThickness: 1.0,
+        horizontalMargin: 10.0,
+        columnSpacing: 10.0,
+        dataRowHeight: 45.0,
+        headingRowColor: MaterialStateProperty.resolveWith<Color>(
+              (Set<MaterialState> states) {
+            return Color.fromRGBO(53, 122, 178, 1);
+          },
         ),
-      ).toList(),
-      rows: usuariosFiltrados.map((Map<String, dynamic> usuario) {
-        return DataRow(
-          color: MaterialStateProperty.resolveWith<Color>(
-                (Set<MaterialState> estados) {
-              return Colors.grey[350]!;
-            },
-          ),
-          cells: usuario.keys.map(
-                (String clave) {
-              final valorCelda = '${usuario[clave]}';
-              return DataCell(
-                Text(
-                  valorCelda,
-                  style: TextStyle(color: Colors.black),
-                ),
-                showEditIcon: false,
-              );
-            },
-          ).toList(),
-        );
-      }).toList(),
-      dividerThickness: 1.0,
-      horizontalMargin: 10.0,
-      columnSpacing: 10.0,
-      dataRowHeight: 45.0,
-      headingRowColor: MaterialStateProperty.resolveWith<Color>(
-            (Set<MaterialState> states) {
-          return Color.fromRGBO(53, 122, 178, 1);
-        },
       ),
     );
   }
@@ -183,7 +224,7 @@ class _EstadoEmpresaPageState extends State<EstadoEmpresaPage> {
               child: Theme(
                 data: Theme.of(context).copyWith(dividerColor: Colors.white),
                 child: SingleChildScrollView(
-                  child: buildDataTable(),
+                  child: generarTablaConstrained(),
                 ),
               ),
             ),

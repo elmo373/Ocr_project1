@@ -59,6 +59,19 @@ class _hojas_de_inspeccionState extends State<hojas_de_inspeccion> {
   Widget build(BuildContext context) {
     final usuariosFiltrados = obtenerUsuariosFiltrados();
 
+    final Map<String, double> columnWidths = {
+      'Documento': 180.0,
+      'Registro': 180.0,
+      'Usuario': 150.0,
+      'Nombre Empresa': 280.0,
+      'Nombre Propietario': 310.0,
+      'Representante Legal': 320.0,
+      'Cumple': 150.0,
+      'Ubicación Depósito': 330.0,
+      'Fecha Emisión': 230.0,
+      'PDF': 100.0,
+    };
+
     return Scaffold(
       body: Container(
         color: Color.fromRGBO(3, 72, 128, 1),
@@ -122,68 +135,99 @@ class _hojas_de_inspeccionState extends State<hojas_de_inspeccion> {
                     child: SingleChildScrollView(
                       scrollDirection: Axis.vertical,
                       child: Directionality(
-                        textDirection: TextDirection.ltr,
-                        child: Theme(
-                          data: ThemeData(
-                            dividerColor: Colors.white,
-                          ),
-                          child: usuariosFiltrados.isNotEmpty
-                              ? DataTable(
-                            columns: titulosColumnas.keys.map(
-                                  (String key) => DataColumn(
-                                label: Text(
-                                  titulosColumnas[key]!,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                          textDirection: TextDirection.ltr,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(minWidth: 1000),
+                            child: Theme(
+                              data: Theme.of(context).copyWith(
+                                dividerColor: Colors.black,
+                                canvasColor: Color.fromRGBO(53, 122, 178, 1),
                               ),
-                            ).toList(),
-                            rows: usuariosFiltrados.map(
-                                  (Map<String, dynamic> documento) {
-                                return DataRow(
-                                  color: MaterialStateProperty.resolveWith<Color>(
-                                        (Set<MaterialState> estados) {
-                                      return Colors.grey[350]!;
-                                    },
-                                  ),
-                                  cells: documento.keys.map(
-                                        (String key) {
-                                      if (key == 'PDF') {
-                                        return DataCell(
-                                          ElevatedButton(
-                                            child: Text('Abrir PDF'),
-                                            onPressed: () => abrirEnlace(documento[key].toString()),
+                              child: usuariosFiltrados.isNotEmpty
+                                  ? DataTable(
+                                columns: [
+                                  ...titulosColumnas.keys.map(
+                                        (String key) => DataColumn(
+                                      label: Container(
+                                        width: columnWidths[key],  // Asegúrate de tener un valor para cada clave.
+                                        alignment: Alignment.centerLeft,
+                                        decoration: BoxDecoration(
+                                          border: Border(
+                                            right: BorderSide(color: Colors.black, width: 1.0),
                                           ),
-                                          showEditIcon: false,
-                                        );
-                                      }
-                                      return DataCell(
-                                        Text(
-                                          documento[key].toString(),
-                                          style: TextStyle(color: Colors.black),
                                         ),
-                                        showEditIcon: false,
-                                      );
-                                    },
-                                  ).toList(),
-                                );
-                              },
-                            ).toList(),
-                            dividerThickness: 1.0,
-                            horizontalMargin: 10.0,
-                            columnSpacing: 10.0,
-                            dataRowHeight: 45.0,
-                            headingRowColor: MaterialStateProperty.resolveWith<Color>(
-                                  (Set<MaterialState> states) {
-                                return Color.fromRGBO(53, 122, 178, 1);
-                              },
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(
+                                            titulosColumnas[key]!,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                rows: usuariosFiltrados.map(
+                                      (Map<String, dynamic> documento) {
+                                    return DataRow(
+                                      color: MaterialStateProperty.resolveWith<Color>(
+                                            (Set<MaterialState> states) {
+                                          return Colors.grey[350]!;
+                                        },
+                                      ),
+                                      cells: documento.keys.map(
+                                            (String key) {
+                                          if (key == 'PDF') {
+                                            return DataCell(
+                                              ElevatedButton(
+                                                child: Text('Abrir PDF'),
+                                                onPressed: () => abrirEnlace(documento[key].toString()),
+                                              ),
+                                              showEditIcon: false,
+                                            );
+                                          }
+                                          return DataCell(
+                                            Container(
+                                              width: columnWidths[key],  // Asegúrate de tener un valor para cada clave.
+                                              alignment: Alignment.centerLeft,
+                                              decoration: BoxDecoration(
+                                                border: Border(
+                                                  right: BorderSide(color: Colors.black, width: 1.0),
+                                                ),
+                                              ),
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(8.0),
+                                                child: Text(
+                                                  documento[key].toString(),
+                                                  style: TextStyle(color: Colors.black),
+                                                ),
+                                              ),
+                                            ),
+                                            showEditIcon: false,
+                                          );
+                                        },
+                                      ).toList(),
+                                    );
+                                  },
+                                ).toList(),
+                                dividerThickness: 1.0,
+                                horizontalMargin: 10.0,
+                                columnSpacing: 10.0,
+                                dataRowHeight: 45.0,
+                                headingRowColor: MaterialStateProperty.resolveWith<Color>(
+                                      (Set<MaterialState> states) {
+                                    return Color.fromRGBO(53, 122, 178, 1);
+                                  },
+                                ),
+                              )
+                                  : Container(),
                             ),
                           )
-                              : Container(),
-                        ),
+
                       ),
                     ),
                   ),

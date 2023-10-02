@@ -55,8 +55,8 @@ class _lista_usuariosState extends State<lista_usuarios> {
       'Contraseña': 180.0,
       'Correo Electrónico': 320.0,
       'Rol': 130.0,
-      'Fecha de Registro': 180.0,
-      'Numero de Telefono': 200.0
+      'Fecha de Registro': 230.0,
+      'Numero de Telefono': 260.0
     };
 
     return Scaffold(
@@ -74,7 +74,6 @@ class _lista_usuariosState extends State<lista_usuarios> {
               ),
             ),
             SizedBox(height: 4),
-
             Container(
               width: MediaQuery.of(context).size.width * 0.4,
               color: Color.fromRGBO(3, 72, 128, 1),

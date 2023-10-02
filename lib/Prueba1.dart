@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:postgres/postgres.dart';
+
+// Asegúrate de importar correctamente tus funciones de encriptación
 import 'package:postgre_flutter/Encriptacion.dart';
+
 void main() {
   runApp(WindowsGestion());
 }
@@ -20,65 +22,50 @@ class WindowsHomePage extends StatefulWidget {
 }
 
 class _WindowsHomePageState extends State<WindowsHomePage> {
-
   @override
   void initState() {
     super.initState();
-    fillTable();
+    encriptarYDesencriptar();
   }
 
-  void fillTable() async {
-    final connection = PostgreSQLConnection(
-      '35.225.248.224',
-      5432,
-      'ocrdb',
-      username: 'emanuel',
-      password: 'emi77',
-    );
+  void encriptarYDesencriptar() {
+    // Definir cinco variables de tipo String
+    String palabra1 = 'Bueno';
+    String palabra2 = 'Malo';
+    String palabra3 = 'Empresa en observacion';
+    String palabra4 = 'No';
+    String palabra5 = '';
 
-    try {
-      await connection.open();
+    // Encriptar las palabras
+    String encriptada1 = AESCrypt.encriptar(palabra1);
+    String encriptada2 = AESCrypt.encriptar(palabra2);
+    String encriptada3 = AESCrypt.encriptar(palabra3);
+    String encriptada4 = AESCrypt.encriptar(palabra4);
+    String encriptada5 = AESCrypt.encriptar(palabra5);
 
-      List<Map<String, dynamic>> datosRegistro = [
-        {
-          'id_doc': AESCrypt.encriptar('68400051029374658'),
-          'id_registro': AESCrypt.encriptar('6840005'),
-          'id_usuario': AESCrypt.encriptar('1029374658'),
-          'nombre_empresa': AESCrypt.encriptar('Explosivos para Minas Seguras S.A.'),
-          'nombre_propietario': AESCrypt.encriptar('Fabio Raul Suarez Guzmán'),
-          'representante_legal': AESCrypt.encriptar('Fabio Raul Suarez Guzmán'),
-          'cumple': AESCrypt.encriptar('No'),
-          'ubicacion_deposito': AESCrypt.encriptar('Oruro,Pantaleón Dalence,Huanuni'),
-          'fecha_de_emision': AESCrypt.encriptar('2023-06-11'),
-          'pdf': AESCrypt.encriptar('https://firebasestorage.googleapis.com/v0/b/appprueba-16698.appspot.com/o/2023-08-04%2010%3A16%3A24.pdf?alt=media&token=6ba70a28-14af-4200-8085-87536ac22cc4'),
-        },
+    // Desencriptar las palabras encriptadas
+    String desencriptada1 = AESCrypt.desencriptar(encriptada1);
+    String desencriptada2 = AESCrypt.desencriptar(encriptada2);
+    String desencriptada3 = AESCrypt.desencriptar(encriptada3);
+    String desencriptada4 = AESCrypt.desencriptar(encriptada4);
+    String desencriptada5 = AESCrypt.desencriptar(encriptada5);
 
-      ];
-
-      for (var dato in datosRegistro) {
-        await connection.query(
-          "INSERT INTO documento_de_inspeccion (id_doc, id_registro, id_usuario, nombre_empresa, nombre_propietario, representante_legal, cumple, ubicacion_deposito, fecha_de_emision, pdf) VALUES ('${dato['id_doc']}', '${dato['id_registro']}', '${dato['id_usuario']}', '${dato['nombre_empresa']}', '${dato['nombre_propietario']}', '${dato['representante_legal']}', '${dato['cumple']}', '${dato['ubicacion_deposito']}', '${dato['fecha_de_emision']}', '${dato['pdf']}')",
-        );
-      }
-
-      print('Datos insertados correctamente');
-    } catch (e) {
-      print('Error en la conexión a PostgreSQL: $e');
-    } finally {
-      await connection.close();
-    }
-
-    setState(() {});
+    // Imprimir las palabras encriptadas y desencriptadas
+    print('Palabra 1 encriptada: $encriptada1, desencriptada: $desencriptada1');
+    print('Palabra 2 encriptada: $encriptada2, desencriptada: $desencriptada2');
+    print('Palabra 3 encriptada: $encriptada3, desencriptada: $desencriptada3');
+    print('Palabra 4 encriptada: $encriptada4, desencriptada: $desencriptada4');
+    print('Palabra 5 encriptada: $encriptada5, desencriptada: $desencriptada5');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.lightGreenAccent[700], // Fondo verde
+        backgroundColor: Colors.lightGreenAccent[700],
         title: Text(
           'Flutter y PostgreSQL, Windows',
-          style: TextStyle(color: Colors.indigo[900]), // Letras blancas
+          style: TextStyle(color: Colors.indigo[900]),
         ),
       ),
       body: Container(

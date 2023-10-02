@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:postgre_flutter/Base de datos/actualizacion_general.dart';
 import 'package:postgre_flutter/para_web/api_control.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:postgre_flutter/Encriptacion.dart';
@@ -21,7 +22,14 @@ class EstadoEmpresaPage extends StatefulWidget {
 }
 
 class _EstadoEmpresaPageState extends State<EstadoEmpresaPage> {
-  final Map<String, int> countByEstado = {'Registro activo': 0, 'Registro anulado': 0, 'Registro caducado': 0};
+  final Map<String, int> countByEstado = {
+    'Registro activo': 0,
+    'Registro anulado': 0,
+    'Registro caducado': 0,
+    'Registro en proceso': 0,  // Nuevo estado
+    'Registro en observación': 0,  // Nuevo estado
+  };
+
   final Link = api_control.BASE_URL;
 
   @override
@@ -31,6 +39,7 @@ class _EstadoEmpresaPageState extends State<EstadoEmpresaPage> {
   }
 
   void EstadoDeEmpresas() async {
+    await actualizacion_general.cambios();
     final actualizarEstadoDeEmpresa = '$Link/query/EstadoDeEmpresas';
     final response = await http.get(Uri.parse(actualizarEstadoDeEmpresa));
 
@@ -52,7 +61,6 @@ class _EstadoEmpresaPageState extends State<EstadoEmpresaPage> {
         }
       });
 
-
       if (mounted) {
         setState(() {});
       }
@@ -60,7 +68,6 @@ class _EstadoEmpresaPageState extends State<EstadoEmpresaPage> {
       print('Error en la solicitud obtenerEstadoDeRegistro HTTP: ${response.statusCode}');
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +80,7 @@ class _EstadoEmpresaPageState extends State<EstadoEmpresaPage> {
           return ListView(
             children: [
               Text(
-                'Grafica de las empresas',
+                'Gráfica de las empresas',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 30,
@@ -123,17 +130,20 @@ class _EstadoEmpresaPageState extends State<EstadoEmpresaPage> {
     );
   }
 
-// Una función para asignar colores a las columnas
+  // Una función para asignar colores a las columnas
   Color getColor(ChartData estado) {
     if (estado.estado == "Registro activo") {
       return Colors.red;
     } else if (estado.estado == "Registro anulado") {
       return Colors.green;
+    } else if (estado.estado == "Registro en proceso") { // Nuevo estado
+      return Colors.yellow; // Puedes cambiar el color
+    } else if (estado.estado == "Registro en observación") { // Nuevo estado
+      return Colors.orange; // Puedes cambiar el color
     } else {
       return Colors.blue;
     }
   }
-
 }
 
 class ChartData {

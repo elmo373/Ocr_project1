@@ -12,6 +12,8 @@ class _estado_hojas_de_inspeccionState extends State<estado_hojas_de_inspeccion>
   List<Map<String, dynamic>> estados = [];
   String consultaBusqueda = '';
   ScrollController controlScroll = ScrollController();
+  bool datosCargados = false;
+
   final Map<String, String> titulosColumnas = {
     'Documento': 'Documento',
     'Registro': 'Registro',
@@ -20,10 +22,8 @@ class _estado_hojas_de_inspeccionState extends State<estado_hojas_de_inspeccion>
     'Nombre Propietario': 'Nombre del Propietario',
     'Representante Legal': 'Representante Legal',
     'Cumple': 'Cumple',
-    'Ubicación Depósito': 'Ubicación del Depósito',
-    'Fecha Emisión': 'Fecha de Emisión',
     'PDF': 'PDF',
-    'Estado': 'Estado',
+
   };
 
   @override
@@ -34,13 +34,32 @@ class _estado_hojas_de_inspeccionState extends State<estado_hojas_de_inspeccion>
   }
 
   void obtenerDocumentos() async {
-    documentos = await base_de_datos_control.obtenerDatosinspeccion();
-    setState(() {});
+    try {
+      documentos = await base_de_datos_control.obtenerDatosinspeccion();
+      if(estados.isNotEmpty) {
+        datosCargados = true;
+      }
+      setState(() {});
+    } catch (error) {
+      print('Error obteniendo documentos: $error');
+    }
   }
 
   void obtenerEstados() async {
-    estados = await base_de_datos_control.obtenerEstadoDeDocumentoDeInspeccion();
-    setState(() {});
+    try {
+      estados = await base_de_datos_control.obtenerEstadoDeDocumentoDeInspeccion();
+      if(documentos.isNotEmpty) {
+        datosCargados = true;
+      }
+      setState(() {});
+    } catch (error) {
+      print('Error obteniendo estados: $error');
+    }
+  }
+
+  Future<void> cambiarEstadoDocumentoInspeccion(String ci) async {
+    await base_de_datos_control.cambiarEstadoDocumentoInspeccion(ci);
+    obtenerEstados();
   }
 
   String getEstadoById(String idDoc) {
@@ -75,6 +94,17 @@ class _estado_hojas_de_inspeccionState extends State<estado_hojas_de_inspeccion>
   Widget build(BuildContext context) {
     final usuariosFiltrados = obtenerUsuariosFiltrados();
 
+    final Map<String, double> columnWidths = {
+      'Documento': 180.0,
+      'Registro': 180.0,
+      'Usuario': 150.0,
+      'Nombre Empresa': 280.0,
+      'Nombre Propietario': 310.0,
+      'Representante Legal': 320.0,
+      'Cumple': 150.0,
+      'PDF': 125.0,
+    };
+
     return Scaffold(
       body: Container(
         color: Color.fromRGBO(3, 72, 128, 1),
@@ -82,7 +112,7 @@ class _estado_hojas_de_inspeccionState extends State<estado_hojas_de_inspeccion>
         child: Column(
           children: [
             Text(
-              'Estado de hojas de inspección',
+              'Estado de documentos de registro',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 30,
@@ -120,8 +150,6 @@ class _estado_hojas_de_inspeccionState extends State<estado_hojas_de_inspeccion>
                         focusedBorder: UnderlineInputBorder(
                           borderSide: BorderSide(color: Colors.white),
                         ),
-                        hintStyle: TextStyle(color: Colors.white),
-                        hintText: 'Escriba su búsqueda aquí...',
                       ),
                     ),
                   ),
@@ -129,87 +157,181 @@ class _estado_hojas_de_inspeccionState extends State<estado_hojas_de_inspeccion>
               ),
             ),
             Expanded(
-              child: Theme(
-                data: ThemeData(
-                  dividerColor: Colors.blue,
-                ),
-                child: Scrollbar(
-                  isAlwaysShown: true,
+              child: Scrollbar(
+                isAlwaysShown: true,
+                controller: controlScroll,
+                child: SingleChildScrollView(
                   controller: controlScroll,
-                  child: SingleChildScrollView(
-                    controller: controlScroll,
-                    scrollDirection: Axis.horizontal,
+                  scrollDirection: Axis.horizontal,
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
                     child: SingleChildScrollView(
                       scrollDirection: Axis.vertical,
                       child: Directionality(
                         textDirection: TextDirection.ltr,
-                      child: DataTable(
-                        columns: titulosColumnas.keys.map(
-                              (String key) => DataColumn(
-                            label: Text(
-                              titulosColumnas[key]!,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                        child: Theme(
+                          data: Theme.of(context).copyWith(
+                            dividerColor: Colors.black,
+                            canvasColor: Color.fromRGBO(53, 122, 178, 1),
                           ),
-                        ).toList(),
-                        rows: usuariosFiltrados.map(
-                              (Map<String, dynamic> usuario) {
-                            return DataRow(
-                              color: MaterialStateProperty.resolveWith<Color>(
-                                    (Set<MaterialState> estados) {
-                                  return Colors.grey[350]!;
-                                },
-                              ),
-                              cells: titulosColumnas.keys.map(
-                                    (String clave) {
-                                  if (clave == 'PDF') {
-                                    return DataCell(
-                                      ElevatedButton(
-                                        child: Text('Abrir PDF'),
-                                        onPressed: () => abrirEnlace(usuario[clave].toString()),
+                          child: usuariosFiltrados.isNotEmpty
+                              ? DataTable(
+                            columns: [
+                              ...titulosColumnas.keys.map(
+                                    (String key) => DataColumn(
+                                  label: Container(
+                                    width: columnWidths[key],  // Aquí aplicamos el ancho
+                                    alignment: Alignment.centerLeft,
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        right: BorderSide(color: Colors.black, width: 1.0),
                                       ),
-                                      showEditIcon: false,
-                                    );
-                                  } else if (clave == 'Estado') {
-                                    final estado = getEstadoById(usuario['Documento']);
-                                    return DataCell(
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          primary: estado == 'activo' ? Colors.green : Colors.red,
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        titulosColumnas[key]!,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                        child: Text(estado),
-                                        onPressed: () {},
                                       ),
-                                      showEditIcon: false,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Container(
+                                  // Este es un caso especial para la columna 'Estado'. Puedes ajustar el ancho como necesites.
+                                  width: 100.0,
+                                  alignment: Alignment.centerLeft,
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      right: BorderSide(color: Colors.black, width: 1.0),
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Estado',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            rows: usuariosFiltrados.map<DataRow>((documento) {
+                              List<DataCell> cells = [];
+                              for (var key in titulosColumnas.keys) {
+                                if (documento.containsKey(key)) {
+                                  if (key == 'PDF') {
+                                    cells.add(
+                                      DataCell(
+                                        Container(
+                                          width: columnWidths[key],  // Aquí aplicamos el ancho
+                                          decoration: BoxDecoration(
+                                            border: Border(
+                                              right: BorderSide(color: Colors.black, width: 1.0),
+                                            ),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: ElevatedButton(
+                                              child: Text('Abrir PDF'),
+                                              onPressed: () => abrirEnlace(documento[key]),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     );
                                   } else {
-                                    return DataCell(
-                                      Text(
-                                        usuario[clave]?.toString() ?? '',
-                                        style: TextStyle(color: Colors.black),
+                                    cells.add(
+                                      DataCell(
+                                        Container(
+                                          width: columnWidths[key],  // Asegúrate de tener un valor para cada clave.
+                                          alignment: Alignment.centerLeft,
+                                          decoration: BoxDecoration(
+                                            border: Border(
+                                              right: BorderSide(color: Colors.black, width: 1.0),
+                                            ),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              documento[key].toString(),
+                                              style: TextStyle(color: Colors.black),
+                                            ),
+                                          ),
+                                        ),
+                                        showEditIcon: false,
                                       ),
-                                      showEditIcon: false,
                                     );
                                   }
-                                },
-                              ).toList(),
-                            );
-                          },
-                        ).toList(),
-                        dividerThickness: 1.0,
-                        horizontalMargin: 10.0,
-                        columnSpacing: 10.0,
-                        dataRowHeight: 45.0,
-                        headingRowColor: MaterialStateProperty.resolveWith<Color>(
-                              (Set<MaterialState> states) {
-                            return Color.fromRGBO(53, 122, 178, 1);
-                          },
+                                }
+                              }
+
+                              cells.add(
+                                DataCell(
+                                  Container(
+                                    width: 100.0,
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        right: BorderSide(color: Colors.black, width: 1.0),
+                                      ),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Switch(
+                                        value: datosCargados ?
+                                        estados.firstWhere(
+                                                (estado) => estado['Documento'] == documento['Documento'],
+                                            orElse: () => {'Estado': 'activo'}
+                                        )['Estado'] == 'activo'
+                                            : true,  // Si los datos no están cargados, por defecto será true (activo)
+                                        onChanged: (value) async {
+                                          setState(() {
+                                            estados.firstWhere((estado) => estado['Documento'] == documento['Documento'])['Estado'] = value ? 'activo' : 'inactivo';
+                                          });
+                                          await cambiarEstadoDocumentoInspeccion(documento['Documento']);
+                                        },
+                                        activeColor: Colors.green,
+                                        inactiveThumbColor: Colors.red,
+                                        activeTrackColor: Colors.green[200],
+                                        inactiveTrackColor: Colors.red[200],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                              );
+
+                              // Verificación
+                              assert(cells.length == titulosColumnas.length + 1);  // +1 por la columna 'Estado'
+
+                              return DataRow(
+                                color: MaterialStateProperty.resolveWith<Color>(
+                                        (Set<MaterialState> estados) {
+                                      return Colors.grey[350]!;
+                                    }),
+                                cells: cells,
+                              );
+                            }).toList(),
+                            dividerThickness: 1.0,
+                            horizontalMargin: 10.0,
+                            columnSpacing: 10.0,
+                            dataRowHeight: 45.0,
+                            headingRowColor: MaterialStateProperty.resolveWith<Color>(
+                                    (Set<MaterialState> estados) {
+                                  return Color.fromRGBO(53, 122, 178, 1);
+                                }),
+                          )
+                              : Container(),
                         ),
-                      ),
                       ),
                     ),
                   ),

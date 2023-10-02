@@ -3,32 +3,20 @@ import 'package:postgres/postgres.dart';
 import 'package:postgre_flutter/encriptacion.dart';
 
 class base_de_datos_control {
+
+  //static String Coneccion = 'localhost';
+
+  static String Coneccion = '35.225.248.224';
+
   static PostgreSQLConnection _getConnection() {
     return PostgreSQLConnection(
-      '35.225.248.224',
+      Coneccion,
       5432,
       'ocrdb',
       username: 'emanuel',
       password: 'emi77',
     );
   }
-
-  static Future<void> eliminarDatos(String nombre_de_tabla, String ci) async {
-    final connection = _getConnection();
-
-    try {
-      await connection.open();
-      ci = AESCrypt.encriptar(ci);
-      await connection.execute("DELETE FROM $nombre_de_tabla WHERE id_ci = '$ci'");
-      print('Usuario eliminado exitosamente');
-    } catch (e) {
-      print('Error al eliminar el usuario: $e');
-    } finally {
-      await connection.close();
-    }
-    obtenerDatos(nombre_de_tabla);
-  }
-
   static Future<void> editarDatos(String nombre_de_tabla, String ci, List<Map<String, dynamic>> dato) async {
     final connection = _getConnection();
 
@@ -79,18 +67,48 @@ class base_de_datos_control {
       final telefonoEncriptado = AESCrypt.encriptar(datos[0]['Numero de Telefono']);
       final fechaEncriptada = AESCrypt.encriptar(fecha);
 
+      print(ciEncriptado);
+
+      // Insertar en la tabla de usuarios
       await connection.query(
           "INSERT INTO $nombre_de_tabla (id_ci, nombre, contrasenna, correo_electronico, rol, numero_de_telefono, fecha_de_registro) "
               "VALUES ('$ciEncriptado', '$nombreEncriptado', '$contrasennaEncriptada', '$correoEncriptado', '$rolEncriptado', '$telefonoEncriptado', '$fechaEncriptada')"
       );
 
       print('Registro agregado exitosamente');
+
+      // Verificar si el rol es "Empresa" y llamar a la función correspondiente
+      if (datos[0]['Rol'] == 'Empresa') {
+        print("Se esta creando una empresa");
+        await estadodeempresa(ciEncriptado, nombreEncriptado);
+      }
     } catch (e) {
       print('Error al agregar el registro: $e');
     } finally {
       await connection.close();
     }
   }
+
+  static Future<void> estadodeempresa(String id_empresa, String nombre) async {
+    final connection = _getConnection();
+
+    try {
+      await connection.open();
+      final estadoEmpresa = AESCrypt.encriptar('Registro en proceso');
+      final razonEmpresa = AESCrypt.encriptar('Aún se está procesando su solicitud'); // Reemplaza con el valor correcto
+      await connection.query(
+          "INSERT INTO estado_empresa (id_empresa, estado_de_la_empresa, nombre, razon) "
+              "VALUES ('$id_empresa', '$estadoEmpresa', '$nombre', '$razonEmpresa')"
+      );
+
+      print('Datos de empresa agregados exitosamente en estado_empresa');
+    } catch (e) {
+      print('Error al agregar los datos de la empresa en estado_empresa: $e');
+    } finally {
+      await connection.close();
+    }
+  }
+
 
   static Future<List<Map<String, dynamic>>> obtenerDatos(String nombre_de_tabla) async {
     final connection = _getConnection();
@@ -216,29 +234,6 @@ class base_de_datos_control {
 
   }
 
-  static Future<void> cambiarEstado(String ci) async {
-    final connection = _getConnection();
-    ci = AESCrypt.encriptar(ci);
-
-    try {
-      await connection.open();
-      final results = await connection.query("SELECT * FROM estado WHERE id_ci = '$ci'");
-      if (results.isEmpty) {
-        // Si no se encontró ningún registro con el ci dado, podemos asumir que el usuario está inactivo.
-
-        await connection.query("INSERT INTO estado (id_ci, estado) VALUES ('$ci', 'activo')");
-      } else {
-        final estadoActual = results.first[1] as String;
-        final nuevoEstado = estadoActual == 'activo' ? 'inactivo' : 'activo';
-        await connection.query("UPDATE estado SET estado = '$nuevoEstado' WHERE id_ci = '$ci'");
-      }
-    } catch (e) {
-      print('Error al cambiar el estado del usuario: $e');
-    } finally {
-      await connection.close();
-    }
-  }
-
   static Future<List<Map<String, dynamic>>> obtenerDatosregistro() async {
     final connection = _getConnection();
 
@@ -305,7 +300,7 @@ class base_de_datos_control {
       if (results.isNotEmpty) {
         return results.map<Map<String, dynamic>>((row) {
           return {
-            'id_doc': AESCrypt.desencriptar(row[0]),  // Asumiendo que id_doc también está encriptado
+            'Documento': AESCrypt.desencriptar(row[0]),  // Asumiendo que id_doc también está encriptado
             'Estado': row[1],
           };
         }).toList();
@@ -329,7 +324,7 @@ class base_de_datos_control {
       if (results.isNotEmpty) {
         return results.map<Map<String, dynamic>>((row) {
           return {
-            'id_doc': AESCrypt.desencriptar(row[0]),  // Asumiendo que id_doc también está encriptado
+            'Documento': AESCrypt.desencriptar(row[0]),  // Asumiendo que id_doc también está encriptado
             'Estado': row[1],
           };
         }).toList();
@@ -343,5 +338,74 @@ class base_de_datos_control {
       await connection.close();
     }
   }
+
+  static Future<void> cambiarEstado(String ci) async {
+    final connection = _getConnection();
+    ci = AESCrypt.encriptar(ci);
+
+    try {
+      await connection.open();
+      final results = await connection.query("SELECT estado, fecha_de_cambio FROM estado WHERE id_ci = '$ci'");
+      if (results.isEmpty) {
+        // Si no se encontró ningún registro con el ci dado, podemos asumir que el usuario está inactivo.
+
+        await connection.query("INSERT INTO estado (id_ci, estado, fecha_de_cambio) VALUES ('$ci', 'activo', null)");
+      } else {
+        final estadoActual = results.first[0] as String;
+        final nuevoEstado = estadoActual == 'activo' ? 'inactivo' : 'activo';
+        final fechaCambio = estadoActual == 'activo' ? DateTime.now().toString().split(' ')[0] : null;
+        await connection.query("UPDATE estado SET estado = '$nuevoEstado', fecha_de_cambio = '$fechaCambio' WHERE id_ci = '$ci'");
+      }
+    } catch (e) {
+      print('Error al cambiar el estado del usuario: $e');
+    } finally {
+      await connection.close();
+    }
+  }
+
+  static Future<void> cambiarEstadoDocumentoInspeccion(String idDoc) async {
+    final connection = _getConnection();
+    idDoc = AESCrypt.encriptar(idDoc);
+
+    try {
+      await connection.open();
+
+      // Cambio de estado para documento de inspección
+      final resultsInsp = await connection.query("SELECT estado, fecha_de_cambio FROM estado_de_documento_de_inspeccion WHERE id_doc = '$idDoc'");
+      if (resultsInsp.isNotEmpty) {
+        final estadoActualInsp = resultsInsp.first[0] as String;
+        final nuevoEstadoInsp = estadoActualInsp == 'activo' ? 'inactivo' : 'activo';
+        final fechaCambioInsp = estadoActualInsp == 'activo' ? null : DateTime.now().toString().split(' ')[0];
+        await connection.query("UPDATE estado_de_documento_de_inspeccion SET estado = '$nuevoEstadoInsp', fecha_de_cambio = '$fechaCambioInsp' WHERE id_doc = '$idDoc'");
+      }
+    } catch (e) {
+      print('Error al cambiar el estado del documento de inspección: $e');
+    } finally {
+      await connection.close();
+    }
+  }
+
+  static Future<void> cambiarEstadoRegistro(String idDoc) async {
+    final connection = _getConnection();
+    idDoc = AESCrypt.encriptar(idDoc);
+
+    try {
+      await connection.open();
+
+      // Cambio de estado para registro
+      final resultsReg = await connection.query("SELECT estado, fecha_de_cambio FROM estado_de_registro WHERE id_doc = '$idDoc'");
+      if (resultsReg.isNotEmpty) {
+        final estadoActualReg = resultsReg.first[0] as String;
+        final nuevoEstadoReg = estadoActualReg == 'activo' ? 'inactivo' : 'activo';
+        final fechaCambioReg = estadoActualReg == 'activo' ? null : DateTime.now().toString().split(' ')[0];
+        await connection.query("UPDATE estado_de_registro SET estado = '$nuevoEstadoReg', fecha_de_cambio = '$fechaCambioReg' WHERE id_doc = '$idDoc'");
+      }
+    } catch (e) {
+      print('Error al cambiar el estado del registro: $e');
+    } finally {
+      await connection.close();
+    }
+  }
+
 
 }

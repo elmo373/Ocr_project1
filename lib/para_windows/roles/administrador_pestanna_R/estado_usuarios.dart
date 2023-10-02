@@ -3,6 +3,7 @@ import 'package:postgre_flutter/para_windows/base_de_datos_control.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:postgre_flutter/Encriptacion.dart';
 import 'package:postgres/postgres.dart';
+import 'package:postgre_flutter/para_windows/base_de_datos_control.dart';
 
 class estados_de_usuarios extends StatelessWidget {
   @override
@@ -31,7 +32,7 @@ class _EstadoUsuarioPageState extends State<EstadoUsuarioPage> {
 
   void actualizarEstadoDeUsuarios() async {
     final connection = PostgreSQLConnection(
-      '35.225.248.224',
+      base_de_datos_control.Coneccion,
       5432,
       'ocrdb',
       username: 'emanuel',

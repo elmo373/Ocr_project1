@@ -43,6 +43,11 @@ class _estado_hojas_de_inspeccionState extends State<estado_hojas_de_inspeccion>
     setState(() {});
   }
 
+  void cambiar_estado (id) async {
+    await api_control.cambiarEstadoDocumentoInspeccion(id);
+    obtenerEstados();
+  }
+
   String getEstadoById(String idDoc) {
     final estadoDoc = estados.firstWhere(
           (estado) => estado['id_doc'] == idDoc,
@@ -182,7 +187,9 @@ class _estado_hojas_de_inspeccionState extends State<estado_hojas_de_inspeccion>
                                           primary: estado == 'activo' ? Colors.green : Colors.red,
                                         ),
                                         child: Text(estado),
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          cambiar_estado(usuario['Documento']);
+                                        },
                                       ),
                                       showEditIcon: false,
                                     );

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:postgre_flutter/para_app/Ocr_app/funciones_ocr.dart';
 import 'package:postgre_flutter/para_app/Ocr_app/pdf_registro.dart';
 
@@ -47,9 +48,12 @@ class _PantallaResultadoState extends State<PantallaResultado> {
   Widget build(BuildContext context) {
     var datosExtraidos = ExtractorDatos.extraerDatos(widget.texto);
 
-    for (var llave in llaves) {
-      _controladores[llave]?.text = datosExtraidos[0][llave] ?? '';
+    if (datosExtraidos.isNotEmpty) {
+      for (var llave in llaves) {
+        _controladores[llave]?.text = datosExtraidos[0][llave] ?? '';
+      }
     }
+
 
     return Scaffold(
       appBar: AppBar(
@@ -63,18 +67,18 @@ class _PantallaResultadoState extends State<PantallaResultado> {
           child: ListView(
             children: <Widget>[
               ...llaves.map((llave) {
-                return Card(
-                  color: Colors.white,
-                  child: Padding(
-                    padding: EdgeInsets.all(10.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        campoTexto(_controladores[llave]!, llave),
-                      ],
+                  return Card(
+                    color: Colors.white,
+                    child: Padding(
+                      padding: EdgeInsets.all(10.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          campoTexto(_controladores[llave]!, llave),
+                        ],
+                      ),
                     ),
-                  ),
-                );
+                  );
               }).toList(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -107,6 +111,8 @@ class _PantallaResultadoState extends State<PantallaResultado> {
                           datosExtraidos[0][llave] = _controladores[llave]!.text;
                         }
 
+                        print(datosExtraidos);
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -126,10 +132,14 @@ class _PantallaResultadoState extends State<PantallaResultado> {
   }
 
   TextFormField campoTexto(TextEditingController controlador, String etiqueta) {
+    String extra = "";
+    if (etiqueta == "Fecha de Emisión"){
+      extra = "(Ej. "+_obtenerFechaActual()+")";
+    }
     return TextFormField(
       controller: controlador,
       decoration: InputDecoration(
-        labelText: etiqueta,
+        labelText: etiqueta + extra,
         labelStyle: TextStyle(color: Color.fromRGBO(3, 72, 128, 1), fontSize: 16.0, fontWeight: FontWeight.bold),
         focusedBorder: UnderlineInputBorder(
           borderSide: BorderSide(color: Color.fromRGBO(3, 72, 128, 1)),
@@ -150,5 +160,10 @@ class _PantallaResultadoState extends State<PantallaResultado> {
         return null;
       },
     );
+  }
+  String _obtenerFechaActual() {
+    final ahora = DateTime.now();
+    final formateador = DateFormat('yyyy-MM-dd');
+    return formateador.format(ahora);
   }
 }

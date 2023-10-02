@@ -66,11 +66,21 @@ class api_control {
     final contrasennaEncriptada = AESCrypt.encriptar(datos[0]['Contraseña']);
     final correoEncriptado = AESCrypt.encriptar(datos[0]['Correo Electrónico']);
     final rolEncriptado = AESCrypt.encriptar(detras_de_rol(datos[0]['Rol']));
-    final telefonoEncriptado = AESCrypt.encriptar(
-        datos[0]['Numero de Telefono']);
+    final telefonoEncriptado = AESCrypt.encriptar(datos[0]['Numero de Telefono']);
     final fechaEncriptada = AESCrypt.encriptar(fecha);
 
-    final addUrl = '$BASE_URL/query/usuarios/insert';
+    var estado = '';
+    var razon = '';
+
+    if (datos[0]['Rol'] == 'Empresa'){
+      estado = AESCrypt.encriptar('Registro en proceso');
+      razon = AESCrypt.encriptar('Aun no se dio el registro');
+    } else{
+      estado = '';
+      razon = '';
+    }
+
+    final addUrl = '$BASE_URL/query/usuarios/insert'; // Reemplaza con la URL correcta de tu API
 
     final Map<String, String> requestBody = {
       'id_ci': ciEncriptado,
@@ -80,23 +90,62 @@ class api_control {
       'rol': rolEncriptado,
       'numero_de_telefono': telefonoEncriptado,
       'fecha_de_registro': fechaEncriptada,
+      'estado': estado,
+      'razon': razon,
     };
 
+    print(requestBody);
 
-    final response = await http.post(
-      Uri.parse(addUrl),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(requestBody),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse(addUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
 
+      if (response.statusCode == 200) {
+        print('Registro agregado exitosamente');
 
-    if (response.statusCode == 200) {
-      print('Registro agregado exitosamente');
-    } else {
-      print('Error al agregar el registro');
+        // Verificar si el rol es "Empresa" y llamar a la función correspondiente
+        if (datos[0]['Rol'] == 'Empresa') {
+          print("Se está creando una empresa");
+          await estadoDeEmpresa(ciEncriptado, nombreEncriptado);
+        }
+      } else {
+        print('Error al agregar el registro');
+      }
+    } catch (e) {
+      print('Error al realizar la solicitud a la API: $e');
     }
-
   }
+
+  static Future<void> estadoDeEmpresa(String id_empresa, String nombre) async {
+    final addUrl = '$BASE_URL/query/estadoDeEmpresa'; // Reemplaza con la URL correcta de tu API para la empresa
+
+    final Map<String, String> requestBody = {
+      'id_empresa': id_empresa,
+      'estado_de_la_empresa': AESCrypt.encriptar('Registro en proceso'),
+      'nombre': nombre,
+      'razon': AESCrypt.encriptar('Aún se está procesando su solicitud'), // Reemplaza con el valor correcto
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(addUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        print('Datos de empresa agregados exitosamente en estado_empresa');
+      } else {
+        print('Error al agregar los datos de la empresa en estado_empresa');
+      }
+    } catch (e) {
+      print('Error al realizar la solicitud a la API para la empresa: $e');
+    }
+  }
+
 
   static Future<List<Map<String, dynamic>>> obtenerDatos(String nombre_de_tabla) async {
     print('obtenerDato');
@@ -285,6 +334,29 @@ class api_control {
     }
   }
 
+  static Future<void> cambiarEstadoDocumentoInspeccion(String id_doc) async {
+    print('cambiar Estado documento de inspección');
+    id_doc = AESCrypt.encriptar(id_doc);
+    final url = '$BASE_URL/query/cambiar_estado_doc_inspeccion/$id_doc';
+    final response = await http.put(Uri.parse(url));
+
+    if (response.statusCode != 200) {
+      print('Error al cambiar el estado del documento de inspección: ${response.statusCode}');
+    }
+  }
+
+  static Future<void> cambiarEstadoRegistro(String id_doc) async {
+    print('cambiar Estado registro');
+    id_doc = AESCrypt.encriptar(id_doc);
+    final url = '$BASE_URL/query/cambiar_estado_registro/$id_doc';
+    final response = await http.put(Uri.parse(url));
+
+    if (response.statusCode != 200) {
+      print('Error al cambiar el estado del registro: ${response.statusCode}');
+    }
+  }
+
+
 
   static Future<List<Map<String, dynamic>>> obtenerDatosregistro() async {
     print('obtenerDatosregistro');
@@ -384,4 +456,6 @@ class api_control {
       return [];
     }
   }
+
+
 }

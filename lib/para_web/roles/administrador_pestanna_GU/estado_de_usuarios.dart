@@ -54,6 +54,14 @@ class _estado_de_usuariosState extends State<estado_de_usuarios> {
   Widget build(BuildContext context) {
     final filteredUsuarios = getFilteredUsuarios();
 
+    final Map<String, double> columnWidths = {
+      'C.I.': 100.0,
+      'Nombre': 300.0,
+      'Correo Electrónico': 320.0,
+      'Rol': 130.0,
+      'Numero de Telefono': 300.0
+    };
+
     return Scaffold(
       body: Container(
         color: Color.fromRGBO(3, 72, 128, 1),
@@ -123,22 +131,36 @@ class _estado_de_usuariosState extends State<estado_de_usuarios> {
                           child: filteredUsuarios.isNotEmpty
                               ? Theme(
                             data: Theme.of(context).copyWith(
-                              dividerColor: Color.fromRGBO(53, 122, 178, 1),
+                              dividerColor: Colors.black, // Color de las líneas divisorias cambiado a negro
                               canvasColor: Color.fromRGBO(53, 122, 178, 1),
                             ),
                             child: DataTable(
                               columns: [
                                 ...titulosColumnas.keys.map(
-                                      (String key) => DataColumn(
-                                    label: Text(
-                                      titulosColumnas[key]!,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
+                                      (String key) {
+                                    return DataColumn(
+                                      label: Container(
+                                        width: columnWidths[key], // Asegúrate de tener un valor para cada clave.
+                                        alignment: Alignment.centerLeft,
+                                        decoration: BoxDecoration(
+                                          border: Border(
+                                            right: BorderSide(color: Colors.black, width: 1.0),
+                                          ),
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(
+                                            titulosColumnas[key]!,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
+                                    );
+                                  },
                                 ),
                                 DataColumn(
                                   label: Text(
@@ -154,11 +176,10 @@ class _estado_de_usuariosState extends State<estado_de_usuarios> {
                               rows: filteredUsuarios.map(
                                     (Map<String, dynamic> usuario) {
                                   final usuarioId = usuario['C.I.'];
-
                                   return DataRow(
                                     color: MaterialStateProperty.resolveWith<Color>(
                                           (Set<MaterialState> states) {
-                                        return Colors.grey[350]!;  // Color para las filas de datos
+                                        return Colors.grey[350]!; // Color para las filas de datos
                                       },
                                     ),
                                     cells: [
@@ -166,9 +187,21 @@ class _estado_de_usuariosState extends State<estado_de_usuarios> {
                                             (String key) {
                                           final cellValue = '${usuario[key]}';
                                           return DataCell(
-                                            Text(
-                                              cellValue,
-                                              style: TextStyle(color: Colors.black),
+                                            Container(
+                                              width: columnWidths[key], // Asegúrate de tener un valor para cada clave.
+                                              alignment: Alignment.centerLeft,
+                                              decoration: BoxDecoration(
+                                                border: Border(
+                                                  right: BorderSide(color: Colors.black, width: 1.0),
+                                                ),
+                                              ),
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(8.0),
+                                                child: Text(
+                                                  cellValue,
+                                                  style: TextStyle(color: Colors.black),
+                                                ),
+                                              ),
                                             ),
                                           );
                                         },

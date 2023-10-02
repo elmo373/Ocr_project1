@@ -52,6 +52,15 @@ class _edicion_de_usuarioState extends State<edicion_de_usuario> {
   Widget build(BuildContext context) {
     final usuariosFiltrados = obtenerUsuariosFiltrados();
 
+    final Map<String, double> columnWidths = {
+      'C.I.': 100.0,
+      'Nombre': 300.0,
+      'Contraseña': 180.0,
+      'Correo Electrónico': 320.0,
+      'Rol': 130.0,
+      'Numero de Telefono': 300.0
+    };
+
     return Scaffold(
       body: Container(
         color: Color.fromRGBO(3, 72, 128, 1),
@@ -114,71 +123,103 @@ class _edicion_de_usuarioState extends State<edicion_de_usuario> {
                     scrollDirection: Axis.vertical,
                     child: Directionality(
                         textDirection: TextDirection.ltr,
-                    child: Theme(
-                      data: ThemeData(
-                        dividerColor: Colors.white,  // Esto personaliza el color de los divisores en el DataTable
-                      ),
-                      child: DataTable(
-                        columns: titulosColumnas.keys.map(
-                              (String clave) => DataColumn(
-                            label: Text(
-                              titulosColumnas[clave]!,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minWidth: 1000),
+                          child: Theme(
+                            data: Theme.of(context).copyWith(
+                              dividerColor: Colors.black,
+                              canvasColor: Color.fromRGBO(53, 122, 178, 1),
                             ),
-                          ),
-                        ).toList()
-                          ..add(
-                            DataColumn(
-                              label: Text(
-                                'Editar',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        rows: obtenerUsuariosFiltrados().map((usuario) {
-                          return DataRow(
-                            color: MaterialStateProperty.all(Colors.grey[350]!),
-                            cells: titulosColumnas.keys.map((String clave) {
-                              return DataCell(
-                                Text(
-                                  usuario[clave].toString(),
-                                  style: TextStyle(color: Colors.black),
-                                ),
-                              );
-                            }).toList()
-                              ..add(
-                                DataCell(
-                                  IconButton(
-                                    icon: Icon(Icons.edit),
-                                    color: Color.fromRGBO(255, 184, 0, 1.0),
-                                    onPressed: () {
-                                      EditoresApi editores = EditoresApi();
-                                      editores.Editar(context, nombre_de_tabla, editarUsuario, usuario['C.I.']);
-                                    },
+                            child: DataTable(
+                              columns: [
+                                ...titulosColumnas.keys.map(
+                                      (String key) => DataColumn(
+                                    label: Container(
+                                      width: columnWidths[key], // Asumo que tienes un mapa similar al anterior para los anchos
+                                      alignment: Alignment.centerLeft,
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          right: BorderSide(color: Colors.black, width: 1.0),
+                                        ),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          titulosColumnas[key]!,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
+                                DataColumn(
+                                  label: Text(
+                                    'Editar',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              rows: obtenerUsuariosFiltrados().map((usuario) {
+                                return DataRow(
+                                  color: MaterialStateProperty.resolveWith<Color>(
+                                        (Set<MaterialState> states) {
+                                      return Colors.grey[350]!;
+                                    },
+                                  ),
+                                  cells: [
+                                    ...titulosColumnas.keys.map(
+                                          (String key) => DataCell(
+                                        Container(
+                                          width: columnWidths[key],
+                                          alignment: Alignment.centerLeft,
+                                          decoration: BoxDecoration(
+                                            border: Border(
+                                              right: BorderSide(color: Colors.black, width: 1.0),
+                                            ),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(
+                                              usuario[key].toString(),
+                                              style: TextStyle(color: Colors.black),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      IconButton(
+                                        icon: Icon(Icons.edit),
+                                        color: Color.fromRGBO(255, 184, 0, 1.0),
+                                        onPressed: () {
+                                          Editores editores = Editores();
+                                          editores.Editar(context, nombre_de_tabla, editarUsuario, usuario['C.I.']);
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                              dividerThickness: 1.0,
+                              horizontalMargin: 10.0,
+                              columnSpacing: 10.0,
+                              dataRowHeight: 45.0,
+                              headingRowColor: MaterialStateProperty.resolveWith<Color>(
+                                    (Set<MaterialState> states) {
+                                  return Color.fromRGBO(53, 122, 178, 1);
+                                },
                               ),
-                          );
-                        }).toList(),
-                        dividerThickness: 1.0,
-                        horizontalMargin: 10.0,
-                        columnSpacing: 10.0,
-                        dataRowHeight: 45.0,
-                        headingRowColor: MaterialStateProperty.resolveWith<Color>(
-                              (Set<MaterialState> estados) {
-                            return Color.fromRGBO(53, 122, 178, 1);  // Color para el encabezado
-                          },
-                        ),
-                      ),
-                    )
+                            ),
+                          ),
+                        )
                     ),
                   ),
                 ),

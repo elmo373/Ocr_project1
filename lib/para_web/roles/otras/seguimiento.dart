@@ -11,6 +11,7 @@ class seguimiento extends StatefulWidget {
 class _seguimientoState extends State<seguimiento> {
   List<Map<String, dynamic>> datosConsolidados = [];
   String consultaBusqueda = '';
+  ScrollController controlScroll = ScrollController();
   Map<String, String> titulosColumnas = {
     'Nombre Empresa': 'Nombre Empresa',
     'Fecha Emisión Inspección': 'Fecha Emisión Inspección',
@@ -94,7 +95,6 @@ class _seguimientoState extends State<seguimiento> {
   }
 
 
-
   void mostrarGrafica(Map<String, dynamic> dato) {
     showDialog(
       context: context,
@@ -165,7 +165,17 @@ class _seguimientoState extends State<seguimiento> {
 
   @override
   Widget build(BuildContext context) {
-    final empresasfiltradas = obtenerEmpresasFiltrados();
+
+    final Map<String, double> columnWidths = {
+      'Nombre Empresa': 280.0,
+      'Fecha Emisión Inspección': 330.0,
+      'PDF Inspección': 220.0,
+      'Fecha Emisión Registro': 330.0,
+      'PDF Registro': 220.0,
+      'Fecha Registro Usuario': 330.0,
+      'Línea de Tiempo': 250.0,
+    };
+
     return Scaffold(
       backgroundColor: Color.fromRGBO(3, 72, 128, 1),  // Cambio de color aquí
       body: Column(
@@ -206,82 +216,133 @@ class _seguimientoState extends State<seguimiento> {
               ],
             ),
           ),
+
           Expanded(
-            child: Center(
+            child: Scrollbar(
+              isAlwaysShown: true,
+              controller: controlScroll,
               child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SingleChildScrollView(
-                child: empresasfiltradas.isNotEmpty
-                ? Theme(
-                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                  child: DataTable(
-                    columns: titulosColumnas.keys.map(
-                          (String key) => DataColumn(
-                        label: Text(
-                          titulosColumnas[key]!,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                controller: controlScroll,
+                scrollDirection: Axis.horizontal,
+                child: Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minWidth: 1000),
+                        child: Theme(
+                          data: Theme.of(context).copyWith(
+                            dividerColor: Colors.black,
+                            canvasColor: Color.fromRGBO(53, 122, 178, 1),
+                          ),
+                          child: DataTable(
+                            columns: [
+                              ...titulosColumnas.keys.map(
+                                    (String key) => DataColumn(
+                                  label: Container(
+                                    width: columnWidths[key],
+                                    alignment: Alignment.centerLeft,
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        right: BorderSide(color: Colors.black, width: 1.0),
+                                      ),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        titulosColumnas[key]!,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            rows: datosConsolidados.map(
+                                  (Map<String, dynamic> dato) {
+                                return DataRow(
+                                  color: MaterialStateProperty.resolveWith<Color>(
+                                        (Set<MaterialState> states) {
+                                      return Colors.grey[350]!;
+                                    },
+                                  ),
+                                  cells: titulosColumnas.keys.map(
+                                        (String clave) {
+                                      final valorCelda = '${dato[clave] ?? 'N/A'}';
+                                      if (clave == 'PDF Inspección' || clave == 'PDF Registro') {
+                                        return DataCell(
+                                          Container(
+                                            alignment: Alignment.centerLeft,
+                                            decoration: BoxDecoration(
+                                              border: Border(
+                                                right: BorderSide(color: Colors.black, width: 1.0),
+                                              ),
+                                            ),
+                                            child: ElevatedButton(
+                                              child: Text('Abrir PDF'),
+                                              onPressed: () => abrirEnlace(dato[clave].toString()),
+                                            ),
+                                          ),
+                                          showEditIcon: false,
+                                        );
+                                      } else if (clave == 'Línea de Tiempo') {
+                                        return DataCell(
+                                          ElevatedButton(
+                                            child: Text('Ver Línea de Tiempo'),
+                                            onPressed: () => mostrarGrafica(dato),
+                                          ),
+                                          showEditIcon: false,
+                                        );
+                                      } else {
+                                        return DataCell(
+                                          Container(
+                                            width: columnWidths[clave],
+                                            alignment: Alignment.centerLeft,
+                                            decoration: BoxDecoration(
+                                              border: Border(
+                                                right: BorderSide(color: Colors.black, width: 1.0),
+                                              ),
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Text(
+                                                valorCelda,
+                                                style: TextStyle(color: Colors.black),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  ).toList(),
+                                );
+                              },
+                            ).toList(),
+                            dividerThickness: 1.0,
+                            horizontalMargin: 10.0,
+                            columnSpacing: 10.0,
+                            dataRowHeight: 45.0,
+                            headingRowColor: MaterialStateProperty.resolveWith<Color>(
+                                  (Set<MaterialState> states) {
+                                return Color.fromRGBO(53, 122, 178, 1);
+                              },
+                            ),
                           ),
                         ),
                       ),
-                    ).toList(),
-                    rows: empresasfiltradas.map(
-                          (Map<String, dynamic> dato) {
-                        return DataRow(
-                          color: MaterialStateProperty.resolveWith<Color>(
-                                (Set<MaterialState> estados) {
-                              return Colors.grey[350]!;  // Color para las filas de datos
-                            },
-                          ),
-                          cells: titulosColumnas.keys.map(
-                                (String clave) {
-                              final valorCelda = '${dato[clave] ?? 'N/A'}';
-                              if (clave == 'PDF Inspección' || clave == 'PDF Registro') {
-                                return DataCell(
-                                  ElevatedButton(
-                                    child: Text('Abrir PDF'),
-                                    onPressed: () => abrirEnlace(dato[clave].toString()),
-                                  ),
-                                  showEditIcon: false,
-                                );
-                              } else if (clave == 'Línea de Tiempo') {  // Esta es la nueva condición agregada
-                                return DataCell(
-                                  ElevatedButton(
-                                    child: Text('Ver Línea de Tiempo'),
-                                    onPressed: () => mostrarGrafica(dato),
-                                  ),
-                                  showEditIcon: false,
-                                );
-                              } else {
-                                return DataCell(
-                                  Text(
-                                    valorCelda,
-                                    style: TextStyle(color: Colors.black),
-                                  ),
-                                );
-                              }
-                            },
-                          ).toList(),
-                        );
-                      },
-                    ).toList(),
-                    dividerThickness: 1.0,
-                    horizontalMargin: 10.0,
-                    columnSpacing: 10.0,
-                    dataRowHeight: 45.0,
-                    headingRowColor: MaterialStateProperty.resolveWith<Color>(
-                          (Set<MaterialState> states) {
-                        return Color.fromRGBO(53, 122, 178, 1);
-                      },
                     ),
                   ),
-                ) : Container(),
+                ),
               ),
             ),
-            ),
           ),
+
         ],
       ),
     );

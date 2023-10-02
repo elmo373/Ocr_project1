@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
-
 import 'estado_del_ocr.dart';
 
 class TextScanner extends StatefulWidget {
@@ -19,6 +18,7 @@ class TextScanner extends StatefulWidget {
 
 
 class _TextScannerState extends State<TextScanner> with WidgetsBindingObserver {
+
   bool isPermissionGranted = false;
   late final Future<void> future;
   final ImagePicker picker = ImagePicker();
@@ -126,7 +126,7 @@ class _TextScannerState extends State<TextScanner> with WidgetsBindingObserver {
                       child: Container(
                         padding: const EdgeInsets.only(left: 24.0, right: 24.0),
                         child: const Text(
-                          'Camera Permission Denied',
+                          'Permiso de camara denegado',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Color.fromRGBO(3, 72, 128, 1),
@@ -199,7 +199,7 @@ class _TextScannerState extends State<TextScanner> with WidgetsBindingObserver {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('An error occurred when scanning text'),
+          content: Text('A ocurrido un error'),
         ),
       );
     }
@@ -216,6 +216,7 @@ class _TextScannerState extends State<TextScanner> with WidgetsBindingObserver {
     final navigator = Navigator.of(context);
     final inputImage = InputImage.fromFile(file);
     final recognizedText = await textDetector.processImage(inputImage);
+    stopCamera();
     await navigator.push(
       MaterialPageRoute(
         builder: (context) => PantallaResultado(texto: recognizedText.text, datos: widget.datos, archivo: file),

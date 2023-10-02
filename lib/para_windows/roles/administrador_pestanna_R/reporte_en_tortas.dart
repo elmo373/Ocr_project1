@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:postgres/postgres.dart';
 import 'package:postgre_flutter/Encriptacion.dart';
 import 'package:pie_chart/pie_chart.dart';
+import 'package:postgre_flutter/para_windows/base_de_datos_control.dart';
 
 class depositos_por_departamento extends StatelessWidget {
   @override
@@ -30,7 +31,7 @@ class _DepositosPorDepartamentoPageState extends State<DepositosPorDepartamentoP
 
   void consultarDepositosPorDepartamento() async {
     final connection = PostgreSQLConnection(
-      '35.225.248.224',
+      base_de_datos_control.Coneccion,
       5432,
       'ocrdb',
       username: 'emanuel',

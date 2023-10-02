@@ -31,6 +31,11 @@ class _estado_documentos_de_registroState
     estados = await api_control.obtenerEstadoDeRegistro();
     setState(() {});
   }
+  
+  void cambiar_estado (id) async {
+    await api_control.cambiarEstadoRegistro(id);
+    obtenerEstados();
+  }
 
   String getEstadoById(String idDoc) {
     final estadoDoc = estados.firstWhere(
@@ -188,7 +193,9 @@ class _estado_documentos_de_registroState
                                           : Colors.red,
                                     ),
                                     child: Text(estado),
-                                    onPressed: () {},
+                                    onPressed: () async {
+                                      cambiar_estado(documento['Documento']);
+                                    },
                                   ),
                                 ),
                               );
